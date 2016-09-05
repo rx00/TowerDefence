@@ -45,7 +45,7 @@ class MainWindow(QWidget):
     def init_game_timer(self):
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.on_tick)
-        self.timer.start(1)
+        self.timer.start(30)
 
     def init_game_map(self):
         waypoints = (
@@ -67,7 +67,7 @@ class MainWindow(QWidget):
         self.obj3.entity_logic_object.attack_range = 200
 
     def on_tick(self):
-        for entity in EntityBridge.entities.keys():
+        for entity in list(EntityBridge.entities.keys()):
             EntityBridge.entities[entity].tick()
         self.clear_entities()
 

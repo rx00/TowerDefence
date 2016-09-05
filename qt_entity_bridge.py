@@ -1,11 +1,14 @@
 from PyQt5.QtGui import QPainter, QPixmap, QColor
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import QPoint
+from attack_entities import AttackEntity
 from entity import Entity
+from road_map import RoadMap
 
 
 class EntityBridge:
     entities = {}
+    last_attack_uuid = -1
 
     def __init__(self, entity_object: Entity, parent=None):
         self.entity_logic_object = entity_object
@@ -22,8 +25,7 @@ class EntityBridge:
                 *self.entity_logic_object.coordinates
             )
         self.entity_graphic_object.show()
-        self.attack_line = QtAttack((10, 10), (20, 20), self.parent)
-        self.boole = False
+        self.current_attacks = {}
 
     def tick(self):
         self.entity_logic_object.tick()
@@ -32,16 +34,26 @@ class EntityBridge:
         )
 
     def attack(self, uuid):
-        #self.attack_line = QtAttack(
-        #    self.entity_logic_object.coordinates,
-        #    Entity.entities[uuid].coordinates,
-        #    self.parent
-        #)
-        if self.boole:
-            self.attack_line.show()
-        else:
-            self.attack_line.hide()
-        self.boole = not self.boole
+        attack_trace = RoadMap(
+            (
+                self.entity_logic_object.coordinates,
+                Entity.entities[uuid].coordinates
+            ))
+        attack_map = attack_trace.step_map
+        attack_entity = EntityBridge(
+            AttackEntity(
+                self.last_attack_uuid,
+                attack_map
+            ),
+            self.parent
+        )
+        self.current_attacks[self.last_attack_uuid] = attack_entity
+        self.last_attack_uuid -= 1
+        attack_entity.entity_logic_object._on_end_of_route = \
+            self.pop_attack
+
+    def pop_attack(self, attack_uuid):
+        self.current_attacks.pop(attack_uuid)
 
     def pop(self):
         self.entities.pop(self.uuid)

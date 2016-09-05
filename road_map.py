@@ -1,6 +1,6 @@
 class RoadMap:
     def __init__(self, raw_road_map):
-        self.raw_road_map = raw_road_map
+        self.raw_road_map = raw_road_map  # ((x, y),(x, y),...,(x, y))
         self._steps = ()
         self._fill_road_map()
 
