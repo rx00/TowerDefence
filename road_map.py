@@ -6,6 +6,9 @@ class RoadMap:
 
     @property
     def step_map(self):
+        """
+        :return: вернуть ссылку на кортеж точек
+        """
         return self._steps
 
     def _fill_road_map(self):
@@ -16,9 +19,9 @@ class RoadMap:
         self._steps += (self.raw_road_map[-1],)
 
     @staticmethod
-    def generate_line(p1, p2):
-        x1, y1 = p1
-        x2, y2 = p2
+    def generate_line(point_1, point_2):
+        x1, y1 = point_1
+        x2, y2 = point_2
         delta_x = abs(x2 - x1)
         delta_y = abs(y2 - y1)
 

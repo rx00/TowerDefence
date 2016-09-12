@@ -1,4 +1,4 @@
-from moving_entity import MovingEntity
+from entities.moving_entity import MovingEntity
 
 
 class AttackEntity(MovingEntity):
@@ -6,4 +6,4 @@ class AttackEntity(MovingEntity):
         super().__init__(uuid, road_map)
         self.skin_dir = "assets/bullet.png"
         self.set_friendly()
-        self.speed = 10
+        self.speed = 7

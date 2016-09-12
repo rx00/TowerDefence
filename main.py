@@ -1,12 +1,13 @@
-from PyQt5.QtWidgets import QWidget, QApplication, QDesktopWidget
-from PyQt5.QtCore import Qt
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from ImageButton import register_button
-from road_map import RoadMap
-from qt_entity_bridge import EntityBridge
-from moving_entity import MovingEntity, Entity
 import sys
+
+from PyQt5 import QtGui
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QWidget, QApplication, QDesktopWidget
+
+from ImageButton import register_button
+from entities.moving_entity import MovingEntity, Entity
+from qt_entity_bridge import EntityBridge
+from game_controller import GameController
 
 
 class MainWindow(QWidget):
@@ -36,24 +37,9 @@ class MainWindow(QWidget):
 
     def start_game(self):
         self.btn_start_game.deleteLater()
-        self.set_window_background("assets/map_01.png")
-        self.init_game_timer()
-        self.init_game_map()
+        controller = GameController(self, "1000")
         self.init_figures()
         self.add_on_tick = False
-
-    def init_game_timer(self):
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.on_tick)
-        self.timer.start(30)
-
-    def init_game_map(self):
-        waypoints = (
-            (-50, 150), (0, 150), (60, 190), (140, 120), (330, 130), (480, 70),
-            (720, 150), (720, 320), (550, 400), (450, 300), (280, 410)
-        )
-        road = RoadMap(waypoints)
-        self.road_map = road.step_map
 
     def init_figures(self):
         self.uuids = 3

@@ -1,4 +1,4 @@
-from entity import Entity
+from entities.entity import Entity
 
 
 class MovingEntity(Entity):
@@ -18,10 +18,10 @@ class MovingEntity(Entity):
         self.distance += self.speed
         self.coordinates = self.road_map[self.distance]
         if self.distance >= len(self.road_map) - self.speed - 1:
-            self._on_end_of_route(self.uuid)
+            self.on_end_of_route(self.uuid)
             self.despawn_entity()
 
-    def _on_end_of_route(self, despawn_uuid):
+    def on_end_of_route(self, despawn_uuid):
         pass
 
     def tick(self):

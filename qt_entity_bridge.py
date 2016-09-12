@@ -1,8 +1,8 @@
-from PyQt5.QtGui import QPainter, QPixmap, QColor
+from PyQt5.QtGui import QPainter, QPixmap
 from PyQt5.QtWidgets import QWidget
-from PyQt5.QtCore import QPoint
-from attack_entities import AttackEntity
-from entity import Entity
+from entities.attack_entities import AttackEntity
+
+from entities.entity import Entity
 from road_map import RoadMap
 
 
@@ -28,12 +28,19 @@ class EntityBridge:
         self.current_attacks = {}
 
     def tick(self):
+        """
+        :return: шина обновления сущностей
+        """
         self.entity_logic_object.tick()
         self.entity_graphic_object.move(
             *self.entity_logic_object.coordinates
         )
 
     def attack(self, uuid):
+        """
+        :param uuid: идентификатор цели атаки
+        :return: инициализирует сущность снаряда
+        """
         attack_trace = RoadMap(
             (
                 self.entity_logic_object.coordinates,
@@ -43,19 +50,26 @@ class EntityBridge:
         attack_entity = EntityBridge(
             AttackEntity(
                 self.last_attack_uuid,
-                attack_map
+                attack_map[20:]
             ),
             self.parent
         )
         self.current_attacks[self.last_attack_uuid] = attack_entity
         self.last_attack_uuid -= 1
-        attack_entity.entity_logic_object._on_end_of_route = \
+        attack_entity.entity_logic_object.on_end_of_route = \
             self.pop_attack
 
     def pop_attack(self, attack_uuid):
+        """
+        :param attack_uuid: id уничтожаемого снаряда
+        :return: стирает снаряд с карты и из памяти
+        """
         self.current_attacks.pop(attack_uuid)
 
     def pop(self):
+        """
+        :return: убивает логическую и графическую сущности
+        """
         self.entities.pop(self.uuid)
         self.entity_graphic_object.deleteLater()
 
@@ -71,15 +85,3 @@ class QtEntity(QWidget):
 
     def sizeHint(self):
         return self.pixmap.size()
-
-
-class QtAttack(QWidget):
-    def __init__(self, point1, point2, parent=None):
-        super(QtAttack, self).__init__(parent)
-        self.point1 = QPoint(*point1)
-        self.point2 = QPoint(*point2)
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setPen(QColor("red"))
-        painter.drawLine(self.point1, self.point2)

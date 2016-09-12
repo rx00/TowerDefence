@@ -27,6 +27,7 @@ class Entity:
         self.attack_range = 1
 
         self.danger_rate = 0
+        self.speed = 0
 
         self.effect_objects = set()
 
@@ -37,10 +38,16 @@ class Entity:
 
     @property
     def priority(self):
+        """
+        :return: приоритет (помогает башням найти самого вкусного монстра)
+        """
         return self.danger_rate
 
     @property
     def coordinates(self):
+        """
+        :return: текущее местоположение
+        """
         return self.__coordinates
 
     @coordinates.setter
@@ -48,12 +55,23 @@ class Entity:
         self.__coordinates = coordinates
 
     def set_friendly(self):
+        """
+        :return: делает сущность дружественной игроку -> всем башням игрока
+        """
         self.friends.add(self.uuid)
 
     def set_unfriendly(self):
+        """
+        :return: делает сущность враждебной игроку
+        """
         self.friends.remove(self.uuid)
 
     def get_damage(self, dmg_points: int, attacker_uuid):
+        """
+        :param dmg_points: кол-во урона, которое придется получить сущности
+        :param attacker_uuid: идентификатор атакующей сущности
+        :return: наносит урон сущности
+        """
         self.last_attacker_uuid = attacker_uuid
         self.health_points = max(0, self.health_points - dmg_points)
         if self.health_points <= 0:
@@ -70,14 +88,28 @@ class Entity:
         )
 
     def cast_effect(self, uuid_target, effect_id, durability, strength):
+        """
+        :param uuid_target: идентификатор цели наложения эффекта
+        :param effect_id: идентификатор эффекта
+        :param durability: время действия эффекта
+        :param strength: сила эффекта
+        :return: кастует эффект на цель
+        """
         self.entities[uuid_target]\
             .__get_effect(self, effect_id, durability, strength)
 
     def heal(self, health_points: int):
+        """
+        :param health_points: кол-во выдаваемых очков здоровья
+        :return: хилит башню
+        """
         self.health_points = \
             min(self.health_points + health_points, self.max_health_points)
 
     def despawn_entity(self):
+        """
+        :return: удалить
+        """
         if self.uuid in self.friends:
             self.friends.remove(self.uuid)
         self.entities.pop(self.uuid)
@@ -100,6 +132,9 @@ class Entity:
         return False
 
     def search_target_uuid(self):
+        """
+        :return: ищет наиболее вкусную цель
+        """
         best_priority = 0
         best_uuid = None
         for uuid in self.entities.keys():
@@ -112,6 +147,9 @@ class Entity:
         return best_uuid
 
     def do_attack(self):
+        """
+        :return: попробовать совершить атаку
+        """
         if not self.current_cooldown:
             best_target_uuid = self.search_target_uuid()
             if best_target_uuid:
@@ -121,10 +159,16 @@ class Entity:
             self.current_cooldown -= 1
 
     def effect_tick(self):
+        """
+        :return: главная шина для тика эффектов
+        """
         for effect in self.effect_objects:
             effect.tick(self)
 
     def tick(self):
+        """
+        :return: главная шина для тика сущностей
+        """
         self.effect_tick()
         self.do_attack()
 
