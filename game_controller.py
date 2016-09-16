@@ -1,9 +1,9 @@
-from PyQt5 import QtCore
 from PyQt5 import QtGui
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QApplication, QDesktopWidget
+from PyQt5.QtWidgets import QWidget
 
 from road_map import RoadMap
+from entities.moving_entity import Entity, MovingEntity
+from qt_entity_bridge import EntityBridge
 
 import json
 import sys
@@ -12,6 +12,7 @@ import binascii
 
 class GameController:
     def __init__(self, main_window_link: QWidget, map_file):
+        self.uuids = 3
         self.app = main_window_link
         self.map_name = None
         self.starting_balance = None
@@ -28,16 +29,37 @@ class GameController:
         self.map_name = read_map["map_name"]
         self.road_map = tuple([tuple(x) for x in read_map["map_road_map"]])
         self.init_logic_map()
-        self.init_game_timer()
+        self.init_figures()  # TODO wave controller
 
     def init_logic_map(self):
         road_map = RoadMap(self.road_map)
-        self.app.road_map = road_map.step_map
+        self.road_map = road_map.step_map
 
-    def init_game_timer(self):
-        self.app.timer = QtCore.QTimer()
-        self.app.timer.timeout.connect(self.app.on_tick)
-        self.app.timer.start(30)
+    def init_figures(self):
+        self.obj2 = EntityBridge(Entity(2), self.app)
+        self.obj2.entity_logic_object.coordinates = (300, 50)
+        self.obj2.entity_logic_object.attack_range = 200
+        self.obj2.entity_logic_object.attack_strength = 5
+        self.obj3 = EntityBridge(Entity(1), self.app)
+        self.obj3.entity_logic_object.coordinates = (210, 200)
+        self.obj3.entity_logic_object.attack_range = 200
+
+    def on_tick(self):
+        for entity in list(EntityBridge.entities.keys()):
+            EntityBridge.entities[entity].tick()
+        self.clear_entities()
+
+        if self.app.add_on_tick:
+            self.uuids += 1
+            a = EntityBridge(MovingEntity(self.uuids, self.road_map), self.app)
+            a.entity_logic_object.speed = 2
+            self.app.add_on_tick = False
+
+    @staticmethod
+    def clear_entities():
+        for entity_uuid in list(EntityBridge.entities.keys()):
+            if entity_uuid not in Entity.entities:
+                EntityBridge.entities[entity_uuid].pop()
 
     def set_window_background(self):
         pixmap = QtGui.QPixmap()

@@ -1,12 +1,11 @@
 import sys
 
+from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QApplication, QDesktopWidget
 
 from ImageButton import register_button
-from entities.moving_entity import MovingEntity, Entity
-from qt_entity_bridge import EntityBridge
 from game_controller import GameController
 
 
@@ -37,37 +36,14 @@ class MainWindow(QWidget):
 
     def start_game(self):
         self.btn_start_game.deleteLater()
-        controller = GameController(self, "1000")
-        self.init_figures()
+        self.controller = GameController(self, "1000")
         self.add_on_tick = False
+        self.init_game_timer(self.controller.on_tick)
 
-    def init_figures(self):
-        self.uuids = 3
-        self.obj2 = EntityBridge(Entity(2), self)
-        self.obj2.entity_logic_object.coordinates = (300, 50)
-        self.obj2.entity_logic_object.attack_range = 200
-        self.obj2.entity_logic_object.attack_strength = 5
-        self.obj2.entity_logic_object.set_friendly()
-        self.obj3 = EntityBridge(Entity(1), self)
-        self.obj3.entity_logic_object.coordinates = (210, 200)
-        self.obj3.entity_logic_object.attack_range = 200
-
-    def on_tick(self):
-        for entity in list(EntityBridge.entities.keys()):
-            EntityBridge.entities[entity].tick()
-        self.clear_entities()
-
-        if self.add_on_tick:
-            self.uuids += 1
-            a = EntityBridge(MovingEntity(self.uuids, self.road_map), self)
-            a.entity_logic_object.speed = 2
-            self.add_on_tick = False
-
-    @staticmethod
-    def clear_entities():
-        for entity_uuid in list(EntityBridge.entities.keys()):
-            if entity_uuid not in Entity.entities:
-                EntityBridge.entities[entity_uuid].pop()
+    def init_game_timer(self, target_method):
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(target_method)
+        self.timer.start(30)
 
     def set_window_background(self, image):
         pal = self.palette()
