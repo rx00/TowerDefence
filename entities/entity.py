@@ -10,7 +10,7 @@ class Entity:
     def __init__(self, uuid):
         self.uuid = uuid
         if uuid in self.entities:
-            raise KeyError("Another entity has this UUID")
+            raise KeyError("Another entity has this ({}) UUID".format(uuid))
         self.entities[uuid] = self
         self.skin_dir = "assets/tower.png"
 
@@ -22,7 +22,7 @@ class Entity:
 
         self.last_attacker_uuid = None
         self.attack_strength = 1
-        self.attack_cooldown = 0
+        self.attack_cooldown = 10
         self.current_cooldown = 0
         self.attack_range = 1
 
@@ -30,6 +30,11 @@ class Entity:
         self.speed = 0
 
         self.effect_objects = set()
+
+        # API
+        self.run_on_despawn = set()
+        self.run_on_entity_kill = set()
+        self.run_on_entity_attack = set()
 
         # TODO experience + money system, after release
         # self.wallet = 0
@@ -110,10 +115,10 @@ class Entity:
         """
         :return: удалить
         """
+        self.on_despawn(self.uuid)
         if self.uuid in self.friends:
             self.friends.remove(self.uuid)
         self.entities.pop(self.uuid)
-        self.on_despawn()
 
     def _attack(self, uuid, attacker_uuid):
         self.on_entity_attack(uuid)
@@ -172,12 +177,14 @@ class Entity:
         self.effect_tick()
         self.do_attack()
 
-    # Little API for overriding
-    def on_despawn(self):
-        pass
+    def on_despawn(self, own_uuid):
+        for func in self.run_on_despawn:
+            func(own_uuid)
 
     def on_entity_kill(self, entity_uuid):
-        pass
+        for func in self.run_on_entity_kill:
+            func(entity_uuid)
 
     def on_entity_attack(self, entity_uuid):
-        pass
+        for func in self.run_on_entity_attack:
+            func(entity_uuid)

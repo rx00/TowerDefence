@@ -22,13 +22,20 @@ class GameController:
         self.set_window_background()
 
     def unpack_map(self, map_file):
-        with open("{}.twm".format(map_file), "r") as json_map:
-            read_map = json.load(json_map)
-        self.map_background = binascii.a2b_base64(read_map["background"])
-        self.starting_balance = read_map["starting_balance"]
-        self.map_name = read_map["map_name"]
-        self.road_map = tuple([tuple(x) for x in read_map["map_road_map"]])
-        self.init_logic_map()
+        try:
+            with open("{}.twm".format(map_file), "r") as json_map:
+                read_map = json.load(json_map)
+            self.map_background = binascii.a2b_base64(read_map["background"])
+            self.starting_balance = read_map["starting_balance"]
+            self.map_name = read_map["map_name"]
+            self.road_map = tuple([tuple(x) for x in read_map["map_road_map"]])
+            self.init_logic_map()
+        except OSError:
+            sys.exit("Не удалось загрузить файл карты!")
+        except IndexError:
+            sys.exit("Файл карты поврежден!")
+        except ValueError:
+            sys.exit("Файл карты поврежден!")
         self.init_figures()  # TODO wave controller
 
     def init_logic_map(self):

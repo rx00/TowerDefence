@@ -19,7 +19,7 @@ class EntityBridge:
             self.entity_logic_object.skin_dir,
             self.parent
         )
-        self.entity_logic_object.on_entity_attack = self.attack
+        self.entity_logic_object.run_on_entity_attack.add(self.attack)
         if len(self.entity_logic_object.coordinates) == 2:
             self.entity_graphic_object.move(
                 *self.entity_logic_object.coordinates
@@ -50,7 +50,7 @@ class EntityBridge:
         attack_entity = EntityBridge(
             AttackEntity(
                 self.last_attack_uuid,
-                attack_map[20:]
+                attack_map
             ),
             self.parent
         )

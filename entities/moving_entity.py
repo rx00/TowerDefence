@@ -9,17 +9,19 @@ class MovingEntity(Entity):
         self.distance = 0
         self.skin_dir = "assets/zombie.png"
         self.coordinates = road_map[self.distance]
+        self.move_cooldown = 0
 
     @property
     def priority(self):
         return self.distance
 
     def do_move(self):
-        self.distance += self.speed
-        self.coordinates = self.road_map[self.distance]
-        if self.distance >= len(self.road_map) - self.speed - 1:
-            self.on_end_of_route(self.uuid)
-            self.despawn_entity()
+        if not self.move_cooldown:
+            self.distance += self.speed
+            self.coordinates = self.road_map[self.distance]
+            if self.distance >= len(self.road_map) - self.speed - 1:
+                self.on_end_of_route(self.uuid)
+                self.despawn_entity()
 
     def on_end_of_route(self, despawn_uuid):
         pass
