@@ -22,6 +22,8 @@ class MovingEntity(Entity):
             if self.distance >= len(self.road_map) - self.speed - 1:
                 self.on_end_of_route(self.uuid)
                 self.despawn_entity()
+        else:
+            self.move_cooldown -= 1
 
     def on_end_of_route(self, despawn_uuid):
         pass

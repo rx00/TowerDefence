@@ -23,7 +23,6 @@ class Effect:
         ]
 
     def heal_instantly(self):
-        self.effect_durability = 1
         self.owner.heal(20 * self.effect_strength)
 
     def regeneration(self):
@@ -53,7 +52,7 @@ class Effect:
 
     def tick(self):
         self.effect_durability -= 1
-        if not self.effect_durability or\
+        if self.effect_durability > 1 or\
                 not self.caller.health_points <= 0 or\
                 not self.owner.health_points <= 0:
             self.owner.effect_objects.remove(self)

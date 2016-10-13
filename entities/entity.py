@@ -22,7 +22,7 @@ class Entity:
 
         self.last_attacker_uuid = None
         self.attack_strength = 1
-        self.attack_cooldown = 10
+        self.attack_cooldown = 3
         self.current_cooldown = 0
         self.attack_range = 1
 
@@ -120,11 +120,6 @@ class Entity:
             self.friends.remove(self.uuid)
         self.entities.pop(self.uuid)
 
-    def _attack(self, uuid, attacker_uuid):
-        self.on_entity_attack(uuid)
-        entity_object = self.entities[uuid]
-        entity_object.get_damage(self.attack_strength, attacker_uuid)
-
     def _coordinates_in_radius(self, cords: tuple):  # TODO debug
         dx = abs(cords[0] - self.__coordinates[0])
         dy = abs(cords[1] - self.__coordinates[1])
@@ -158,7 +153,7 @@ class Entity:
         if not self.current_cooldown:
             best_target_uuid = self.search_target_uuid()
             if best_target_uuid:
-                self._attack(best_target_uuid, self.uuid)
+                self.on_entity_attack(best_target_uuid)
                 self.current_cooldown = self.attack_cooldown
         else:
             self.current_cooldown -= 1
@@ -168,7 +163,7 @@ class Entity:
         :return: главная шина для тика эффектов
         """
         for effect in self.effect_objects:
-            effect.tick(self)
+            effect.tick()
 
     def tick(self):
         """
