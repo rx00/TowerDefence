@@ -57,7 +57,10 @@ class Entity:
 
     @coordinates.setter
     def coordinates(self, coordinates: tuple):
-        self.__coordinates = coordinates
+        if type(coordinates) == tuple and len(coordinates) == 2:
+            self.__coordinates = coordinates
+        else:
+            raise ValueError("Field requires (x, y) tuple!")
 
     def set_friendly(self):
         """
