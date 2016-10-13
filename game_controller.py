@@ -43,11 +43,11 @@ class GameController:
         self.road_map = road_map.step_map
 
     def init_figures(self):
-        self.obj2 = EntityBridge(Entity(2), self.app)
+        self.obj2 = EntityBridge(Entity(2), self.app, static=True)
         self.obj2.entity_logic_object.coordinates = (300, 50)
         self.obj2.entity_logic_object.attack_range = 200
         self.obj2.entity_logic_object.attack_strength = 5
-        self.obj3 = EntityBridge(Entity(1), self.app)
+        self.obj3 = EntityBridge(Entity(1), self.app, static=True)
         self.obj3.entity_logic_object.coordinates = (210, 200)
         self.obj3.entity_logic_object.attack_range = 200
 

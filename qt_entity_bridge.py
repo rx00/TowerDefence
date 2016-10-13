@@ -7,16 +7,19 @@ class EntityBridge:
     entities = {}
     last_attack_uuid = -1
 
-    def __init__(self, entity_object, parent=None, show_health=True):
+    def __init__(self,
+                 entity_object, parent=None, show_health=True, static=False):
 
         self.entity_logic_object = entity_object
         self.uuid = entity_object.uuid
         self.parent = parent
         self.entities[self.uuid] = self
+
         self.entity_graphic_object = QtEntity(
             self.entity_logic_object.skin_dir,
             self.parent
         )
+
         self.entity_logic_object.run_on_entity_attack.add(self.attack)
         if len(self.entity_logic_object.coordinates) == 2:
             self.entity_graphic_object.move(
@@ -24,10 +27,16 @@ class EntityBridge:
             )
 
         self.show_health = show_health
+        self.static = static
+
         if show_health:
             self.entity_logic_object_health = QtHealth(
                 self.parent
             )
+            if len(self.entity_logic_object.coordinates) == 2:
+                self.entity_logic_object_health.move(
+                    *self.entity_logic_object.coordinates
+                )
             self.entity_logic_object_health.show()
 
         self.entity_graphic_object.show()
@@ -50,6 +59,8 @@ class EntityBridge:
                 self.entity_logic_object.coordinates[1]+23
 
             )
+        if self.static:
+            self.entity_graphic_object.repaint()
 
     def attack(self, uuid):
         """

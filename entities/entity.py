@@ -57,7 +57,9 @@ class Entity:
 
     @coordinates.setter
     def coordinates(self, coordinates: tuple):
-        if type(coordinates) == tuple and len(coordinates) == 2:
+        if isinstance(coordinates, tuple) and len(coordinates) == 2 and \
+                        isinstance(coordinates[1], int) and\
+                        isinstance(coordinates[0], int):
             self.__coordinates = coordinates
         else:
             raise ValueError("Field requires (x, y) tuple!")
@@ -86,9 +88,8 @@ class Entity:
             try:
                 self.entities[self.last_attacker_uuid]\
                     .on_entity_kill(self.uuid)
-            except KeyError:
-                pass
-            self.despawn_entity()
+            finally:
+                self.despawn_entity()
 
     def __get_effect(self, caller_link, effect_id, durability, strength):
         self.effect_objects.add(
@@ -165,7 +166,7 @@ class Entity:
         """
         :return: главная шина для тика эффектов
         """
-        for effect in self.effect_objects:
+        for effect in list(self.effect_objects):
             effect.tick()
 
     def tick(self):
