@@ -20,7 +20,9 @@ class EntityBridge:
             self.parent
         )
 
-        self.entity_logic_object.run_on_entity_attack.add(self.attack)
+        self.entity_logic_object.on_entity_attack_event.add(
+            self.tower_attack_controller
+        )
         if len(self.entity_logic_object.coordinates) == 2:
             self.entity_graphic_object.move(
                 *self.entity_logic_object.coordinates
@@ -62,7 +64,7 @@ class EntityBridge:
         if self.static:
             self.entity_graphic_object.repaint()
 
-    def attack(self, uuid):
+    def tower_attack_controller(self, uuid):
         """
         :param uuid: идентификатор цели атаки
         :return: инициализирует сущность снаряда
@@ -78,7 +80,7 @@ class EntityBridge:
         )
         self.current_attacks[self.last_attack_uuid] = attack_entity
         EntityBridge.last_attack_uuid -= 1
-        attack_entity.entity_logic_object.run_on_end_of_route.\
+        attack_entity.entity_logic_object.on_end_of_route_event.\
             add(self.pop_attack)
 
     def pop_attack(self, attack_uuid):
@@ -127,8 +129,9 @@ class QtHealth(QWidget):
 
     def update_health_color(self, health):
         comparator = {
-            14: "Orange",
-            9: "Yellow",
+            17: "GreenYellow",
+            14: "Yellow",
+            9: "Orange",
             4: "Red"
         }
         if health in comparator:

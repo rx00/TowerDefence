@@ -19,8 +19,8 @@ class AttackEntity(Entity):
         self.update_road_map()
         self.set_friendly()
 
-        self.run_on_end_of_route = set()
-        self.run_on_end_of_route.add(self.__attack)
+        self.on_end_of_route_event = set()
+        self.on_end_of_route_event.add(self.__attack)
 
     @property
     def priority(self):
@@ -56,7 +56,7 @@ class AttackEntity(Entity):
                 self.coordinates = self.road_map[0]
 
     def on_end_of_route(self, despawn_uuid):
-        for func in self.run_on_end_of_route:
+        for func in self.on_end_of_route_event:
             func(despawn_uuid)
 
     def tick(self):

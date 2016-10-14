@@ -10,6 +10,7 @@ class MovingEntity(Entity):
         self.skin_dir = "assets/zombie.png"
         self.coordinates = road_map[self.distance]
         self.move_cooldown = 0
+        self.run_on_end_event = set()
 
     @property
     def priority(self):
@@ -26,7 +27,8 @@ class MovingEntity(Entity):
             self.move_cooldown -= 1
 
     def on_end_of_route(self, despawn_uuid):
-        pass
+        for func in self.run_on_end_event:
+            func(despawn_uuid)
 
     def tick(self):
         self.do_move()

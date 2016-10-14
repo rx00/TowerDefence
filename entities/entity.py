@@ -21,8 +21,8 @@ class Entity:
         self.health_points = 100
 
         self.last_attacker_uuid = None
-        self.attack_strength = 1
-        self.attack_cooldown = 3
+        self.attack_strength = 4
+        self.attack_cooldown = 1
         self.current_cooldown = 0
         self.attack_range = 1
 
@@ -32,9 +32,9 @@ class Entity:
         self.effect_objects = set()
 
         # API
-        self.run_on_despawn = set()
-        self.run_on_entity_kill = set()
-        self.run_on_entity_attack = set()
+        self.on_despawn_event = set()
+        self.on_entity_kill_event = set()
+        self.on_entity_attack_event = set()
 
         # TODO experience + money system, after release
         # self.wallet = 0
@@ -177,13 +177,13 @@ class Entity:
         self.do_attack()
 
     def on_despawn(self, own_uuid):
-        for func in self.run_on_despawn:
+        for func in self.on_despawn_event:
             func(own_uuid)
 
     def on_entity_kill(self, entity_uuid):
-        for func in self.run_on_entity_kill:
+        for func in self.on_entity_kill_event:
             func(entity_uuid)
 
     def on_entity_attack(self, entity_uuid):
-        for func in self.run_on_entity_attack:
+        for func in self.on_entity_attack_event:
             func(entity_uuid)
