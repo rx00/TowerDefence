@@ -7,8 +7,8 @@ from entities.moving_entity import Entity, MovingEntity
 from qt_entity_bridge import EntityBridge
 
 import json
-import sys
-import binascii
+import zipfile
+import configparser
 
 
 class GameController:
@@ -16,21 +16,24 @@ class GameController:
         self.uuids = 3
         self.app = main_window_link
         self.map_name = None
-        self.starting_balance = None
         self.map_background = None
         self.road_map = None
-        self.unpack_map(map_file)
         self.health = 100
         self.money = 0
+
+        # Init objects
+        self.unzip_map(map_file)
         self.set_window_background()
         self.init_gui_elements()
 
     def init_gui_elements(self):
+        # Init status bar
         self.status_bar_label = QLabel(self.app)
         pixmap = QtGui.QPixmap("assets/status_bar.png")
         self.status_bar_label.setPixmap(pixmap)
         self.status_bar_label.move(10, 10)
 
+        # Init text labels
         self.health_bar = QLabel(self.status_bar_label)
         self.money_bar = QLabel(self.status_bar_label)
 
@@ -42,6 +45,8 @@ class GameController:
         font_description = "font-family: Comic Sans MS; color: #B6B6B4;"
         self.health_bar.setStyleSheet(font_description)
         self.money_bar.setStyleSheet(font_description)
+
+        # Show labels
         self.status_bar_label.show()
         self.health_bar.show()
         self.money_bar.show()
@@ -56,23 +61,51 @@ class GameController:
         self.money += money
         self.money_bar.setText(str(self.money))
 
-    def unpack_map(self, map_file):  # make zipper!
+    def unzip_map(self, map_file):
+        config_file = "config.ini"
+        globals_section = "globals"
+        if zipfile.is_zipfile(map_file + ".zip"):
+            try:
+                with zipfile.ZipFile("{}.zip".format(map_file))\
+                        as zip_folder:
+                    if config_file in zip_folder.namelist():
+                        configs = configparser.ConfigParser()
+                        configs.read_string(
+                            zip_folder.read(config_file).decode()
+                        )
+                        if globals_section in configs.sections():
+                            try:
+                                self.__unpacker(
+                                    configs,
+                                    globals_section,
+                                    zip_folder
+                                )
+                            except KeyError as e:
+                                raise ValueError("Отсутствуют конфиг-секции {}"
+                                                 .format(e))
 
-        try:
-            with open("{}.twm".format(map_file), "r") as json_map:
-                read_map = json.load(json_map)
-            self.map_background = binascii.a2b_base64(read_map["background"])
-            self.starting_balance = read_map["starting_balance"]
-            self.map_name = read_map["map_name"]
-            self.road_map = tuple([tuple(x) for x in read_map["map_road_map"]])
-            self.init_logic_map()
-        except OSError:
-            sys.exit("Не удалось загрузить файл карты!")
-        except IndexError:
-            sys.exit("Файл карты поврежден!")
-        except ValueError:
-            sys.exit("Файл карты поврежден!")
-        self.init_figures()  # TODO wave controller
+                        else:
+                            raise ValueError("Не найдены {}".format(
+                                globals_section
+                            ))
+                    else:
+                        raise ValueError("Отсутствует файл {}"
+                                         .format(config_file))
+            except OSError as e:
+                raise ValueError("Не удалось прочитать файл {}, ({})!"
+                                 .format(map_file, e))
+        else:
+            raise ValueError("{} не является zip файлом".format(map_file))
+
+    def __unpacker(self, config_object, config_globals_name, archive_object):
+        main_config = config_object[config_globals_name]
+        self.map_background = archive_object.read(main_config["background"])
+        self.road_map = tuple([tuple(x) for x in
+                               json.loads(main_config["road_map"])
+                               ])
+        self.money = int(main_config["balance"])
+        self.init_logic_map()
+        self.init_figures()
 
     def init_logic_map(self):
         road_map = RoadMap(self.road_map)
@@ -118,18 +151,3 @@ class GameController:
                      QtGui.QBrush(pixmap))
         self.app.setPalette(pal)
         self.app.autoFillBackground()
-
-
-def build_map(image_path, map_name, balance, road_map):
-    based_image = binascii.b2a_base64(open(image_path, mode="rb").read())
-    map_dict = {
-        "background": based_image.decode(),
-        "starting_balance": balance,
-        "map_name": map_name,
-        "road_map": road_map
-    }
-    with open("{}.twm".format(map_name), 'w') as map_file:
-        json.dump(map_dict, map_file)
-
-if __name__ == '__main__':
-    build_map(sys.argv[1], sys.argv[2], sys.argv[3])
