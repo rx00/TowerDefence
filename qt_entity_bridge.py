@@ -101,6 +101,32 @@ class EntityBridge:
             self.entity_logic_object_health.deleteLater()
 
 
+class QtBasement(QWidget):
+    def __init__(self, cords, parent=None):
+        super(QtBasement, self).__init__(parent)
+        self.move(*cords)
+        self.non_active = QPixmap("assets/install_transparent.png")
+        self.active = QPixmap("assets/install_active.png")
+        self.current_pixmap = self.non_active
+        self.clicked = False
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.drawPixmap(event.rect(), self.current_pixmap)
+
+    def mousePressEvent(self, event):
+        if self.clicked:
+            self.current_pixmap = self.non_active
+            self.clicked = False
+        else:
+            self.current_pixmap = self.active
+            self.clicked = True
+        self.repaint()
+
+    def sizeHint(self):
+        return self.current_pixmap.size()
+
+
 class QtEntity(QWidget):
     def __init__(self, skin_dir, parent=None):
         super(QtEntity, self).__init__(parent)

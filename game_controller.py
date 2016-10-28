@@ -1,10 +1,10 @@
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QWidget, QLabel
 
-
+from ImageButton import register_button
 from road_map import RoadMap
 from entities.moving_entity import Entity, MovingEntity
-from qt_entity_bridge import EntityBridge
+from qt_entity_bridge import EntityBridge, QtBasement
 
 import json
 import zipfile
@@ -22,7 +22,11 @@ class GameController:
         self.money = 0
 
         # Init objects
-        self.unzip_map(map_file)
+        try:
+            self.unzip_map(map_file)
+        except ValueError as e:
+            raise GameControllerError(
+                "Ошибка при инициализации карты: {}".format(e))
         self.set_window_background()
         self.init_gui_elements()
 
@@ -46,10 +50,68 @@ class GameController:
         self.health_bar.setStyleSheet(font_description)
         self.money_bar.setStyleSheet(font_description)
 
+        # Init buttons
+        self.pause_button = register_button(
+            (740, 10),
+            ["assets/button_stop.png", "assets/button_stop.png"],
+            self.app,
+            self.set_pause
+        )
+        self.pause_button.resize(40, 40)
+
+        self.play_button = register_button(
+            (740, 10),
+            ["assets/button_play.png", "assets/button_play.png"],
+            self.app,
+            self.set_play
+        )
+        self.play_button.resize(40, 40)
+
+        self.speed_up_button = register_button(
+            (680, 10),
+            ["assets/speed_up.png", "assets/speed_up.png"],
+            self.app,
+            self.increase_speed
+        )
+        self.speed_up_button.resize(40, 40)
+
+        self.speed_down_button = register_button(
+            (680, 10),
+            ["assets/speed_down.png", "assets/speed_down.png"],
+            self.app,
+            self.decrease_speed
+        )
+        self.speed_down_button.resize(40, 40)
+
         # Show labels
         self.status_bar_label.show()
         self.health_bar.show()
         self.money_bar.show()
+        self.play_button.hide()
+        self.pause_button.show()
+        self.speed_up_button.show()
+
+    def increase_speed(self):
+        self.app.timer.start(15)
+        self.speed_up_button.hide()
+        self.speed_down_button.show()
+
+    def decrease_speed(self):
+        self.app.timer.start(30)
+        self.speed_down_button.hide()
+        self.speed_up_button.show()
+
+    def set_pause(self):
+        self.app.timer.stop()
+        self.pause_button.hide()
+        self.play_button.show()
+
+    def set_play(self):
+        self.app.timer.start(30)
+        self.speed_down_button.hide()
+        self.speed_up_button.show()
+        self.play_button.hide()
+        self.pause_button.show()
 
     def decrease_health(self, entity_uuid):
         damage = Entity.entities[entity_uuid].attack_strength
@@ -62,6 +124,10 @@ class GameController:
         self.money_bar.setText(str(self.money))
 
     def unzip_map(self, map_file):
+        """
+        :param map_file: имя файла с картой
+        :return: инициализирует карту
+        """
         config_file = "config.ini"
         globals_section = "globals"
         if zipfile.is_zipfile(map_file + ".zip"):
@@ -83,7 +149,6 @@ class GameController:
                             except KeyError as e:
                                 raise ValueError("Отсутствуют конфиг-секции {}"
                                                  .format(e))
-
                         else:
                             raise ValueError("Не найдены {}".format(
                                 globals_section
@@ -97,7 +162,17 @@ class GameController:
         else:
             raise ValueError("{} не является zip файлом".format(map_file))
 
-    def __unpacker(self, config_object, config_globals_name, archive_object):
+    def __unpacker(self,
+                   config_object: configparser.ConfigParser,
+                   config_globals_name,
+                   archive_object: zipfile.ZipFile
+                   ):
+        """
+        :param config_object: объект для парсинга конфигов
+        :param config_globals_name: ссылка на глобальный пункт конфигов
+        :param archive_object: объект для распаковки
+        :return: выставляет игровых полей (при старте игры)
+        """
         main_config = config_object[config_globals_name]
         self.map_background = archive_object.read(main_config["background"])
         self.road_map = tuple([tuple(x) for x in
@@ -108,13 +183,18 @@ class GameController:
         self.init_figures()
 
     def init_logic_map(self):
+        """
+        :return: переводит набор точек карты в большой набор точек (на пути)
+        """
         road_map = RoadMap(self.road_map)
         self.road_map = road_map.step_map
 
-    def init_figures(self):
+    def init_figures(self):  # TODO вынести нахер
         self.obj2 = EntityBridge(Entity(2), self.app, static=True)
         self.obj2.entity_logic_object.on_entity_kill_event.add(self.add_money)
         self.obj2.entity_logic_object.coordinates = (300, 50)
+        self.basement = QtBasement((300, 20), self.app)
+        self.basement.show()
         self.obj2.entity_logic_object.attack_range = 200
         self.obj2.entity_logic_object.attack_strength = 20
         self.obj3 = EntityBridge(Entity(1), self.app, static=True)
@@ -151,3 +231,7 @@ class GameController:
                      QtGui.QBrush(pixmap))
         self.app.setPalette(pal)
         self.app.autoFillBackground()
+
+
+class GameControllerError(Exception):
+    pass

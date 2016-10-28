@@ -41,8 +41,8 @@ class Entity:
 
         self.on_entity_attack_event.add(self.summon_attacking_entity)
 
-        # TODO experience + money system, after release
         self.wallet = 10
+        # TODO experience
         # self.experience_points = 0
         # self.level = 1
 

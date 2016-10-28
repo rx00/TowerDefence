@@ -61,11 +61,6 @@ class MainWindow(QWidget):
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_Escape:
             self.close()
-        if e.key() == Qt.Key_Tab:
-            if self.timer.isActive():
-                self.timer.stop()
-            else:
-                self.timer.start(30)
         if e.key() == Qt.Key_Space:
             self.add_on_tick = True
 
