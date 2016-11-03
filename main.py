@@ -37,7 +37,7 @@ class MainWindow(QWidget):
     def start_game(self):
         self.btn_start_game.deleteLater()
         self.controller = GameController(self, "1000")
-        self.add_on_tick = False
+        self.set_pause = False
         self.init_game_timer(self.controller.on_tick)
 
     def init_game_timer(self, target_method):
@@ -61,8 +61,6 @@ class MainWindow(QWidget):
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_Escape:
             self.close()
-        if e.key() == Qt.Key_Space:
-            self.add_on_tick = True
 
 
 if __name__ == '__main__':

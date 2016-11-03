@@ -3,8 +3,9 @@ from PyQt5.QtWidgets import QWidget, QLabel
 
 from ImageButton import register_button
 from road_map import RoadMap
-from entities.moving_entity import Entity, MovingEntity
+from entities.moving_entity import Entity
 from qt_entity_bridge import EntityBridge, QtBasement
+from wave_controller import WaveController
 
 import json
 import zipfile
@@ -21,7 +22,10 @@ class GameController:
         self.money = 0
 
         self.map_objects = set()
+        self.basements = set()
 
+        self.is_last_monster = False
+        self.wave_controller = None
         # Пре-инициализация карты и ее параметров
         try:
             self.unzip_map(map_file)
@@ -30,10 +34,10 @@ class GameController:
                 "Ошибка при инициализации карты: {}".format(e)
             )
         self.init_logic_map()
-        self.init_basements()
         self.set_window_background()
         self.init_gui_elements()
         self.init_control_panel()
+        self.init_wave_controller()
 
     def init_gui_elements(self):
         # Инициализация статус-бара
@@ -41,6 +45,16 @@ class GameController:
         pixmap = QtGui.QPixmap("assets/status_bar.png")
         self.status_bar_label.setPixmap(pixmap)
         self.status_bar_label.move(10, 10)
+
+        self.wave_label = QLabel(self.app)
+        self.wave_label.setGeometry(350, 25, 100, 25)
+        self.wave_label\
+            .setStyleSheet("background-color: rgba(255, 255, 200, 0);"
+                           "font-family: Comic Sans MS;"
+                           "color: rgba(255, 255, 255, 0);")
+        self.wave_label.show()
+        self.wave_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.wave_label.setText("0")
 
         # Инициализация текстовых полей
         self.health_bar = QLabel(self.status_bar_label)
@@ -95,6 +109,28 @@ class GameController:
         self.play_button.hide()
         self.pause_button.show()
         self.speed_up_button.show()
+
+    def show_progressbar_text(self, text):
+        self.wave_label.setText(text)
+        self.intence = 0
+        self.new_timer = QtCore.QTimer()
+        self.new_timer.timeout.connect(self.__get_intence)
+        self.new_timer.start(5)
+
+    def __get_intence(self):
+        self.intence += 1
+        self.wave_label.show()
+        self.growth = -(1/5) * (((self.intence - 670) / 30) ** 2) + 100
+        if self.growth > 0:
+            self.wave_label.setStyleSheet(
+                "background-color: rgba(255, 255, 200, {});"
+                "color: rgba(255, 255, 255, {});".format(
+                    int(self.growth), int(self.growth))
+            )
+        else:
+            self.new_timer.stop()
+            self.wave_label.hide()
+
 
     def increase_speed(self):
         self.app.timer.start(15)
@@ -184,6 +220,17 @@ class GameController:
                                json.loads(main_config["road_map"])
                                ])
         self.money = int(main_config["balance"])
+        basement_cords = tuple(
+            tuple(cords) for cords in json.loads(main_config["basements"])
+        )
+        for basement_cord in basement_cords:
+            new_basement = QtBasement(
+                basement_cord, self.show_control_panel, self.app
+            )
+            new_basement.show()
+            self.basements.add(new_basement)
+
+        self.wave_controller = json.loads(main_config["waves"])
 
     def init_logic_map(self):
         """
@@ -192,25 +239,22 @@ class GameController:
         road_map = RoadMap(self.road_map)
         self.road_map = road_map.step_map
 
-    def init_basements(self):  # TODO вынести в инициализацию карты
-        self.basement2 = QtBasement((300, 50), self.show_control_panel, self.app)
-        self.basement2.show()
-        self.basement1 = QtBasement((300, 250), self.show_control_panel, self.app)
-        self.basement1.show()
-        self.basement3 = QtBasement((210, 200), self.show_control_panel, self.app)
-        self.basement3.show()
+    def init_wave_controller(self):
+        self.wave_controller = WaveController(
+            self.wave_controller,
+            self.road_map,
+            self
+        )
 
     def on_tick(self):
         for entity in list(EntityBridge.entities.keys()):
             EntityBridge.entities[entity].tick()
         self.clear_entities()
 
-        if self.app.add_on_tick:
-            a = EntityBridge(MovingEntity(self.road_map), self.app)
-            a.entity_logic_object.speed = 3
-            a.entity_logic_object.on_end_of_route_event.\
-                add(self.decrease_health)
-            self.app.add_on_tick = False
+        if not self.is_last_monster:
+            self.wave_controller.tick()
+        else:
+            print("WIN!")
 
     @staticmethod
     def clear_entities():
@@ -231,7 +275,9 @@ class GameController:
         self.control_panel_position = 800
         self.control_panel_position_delta = -1
         self.control_panel = QLabel(self.app)
-        self.control_panel.setGeometry(self.control_panel_position, 0, 250, 500)
+        self.control_panel.setGeometry(
+            self.control_panel_position, 0, 250, 500
+        )
         self.control_panel\
             .setStyleSheet("background-color: rgba(0, 0, 0, 200);")
         self.control_panel.show()
@@ -245,6 +291,7 @@ class GameController:
             self.control_panel,
             self.__hide_control_panel
         )
+        self.control_panel_is_hidden = True
         self.close_control_panel.show()
 
     def show_control_panel(self, qt_object_link):
@@ -289,10 +336,12 @@ class GameController:
             self.gendalf_bt.show()
             self.golem_bt.show()
 
-        self.animation_timer = QtCore.QTimer()
-        self.animation_timer.timeout\
-            .connect(self.change_control_panel_position)
-        self.animation_timer.start(1)
+        if self.control_panel_is_hidden:
+            self.control_panel_is_hidden = False
+            self.animation_timer = QtCore.QTimer()
+            self.animation_timer.timeout\
+                .connect(self.change_control_panel_position)
+            self.animation_timer.start(1)
 
     def set_cannon(self):
         if self.money - 20 >= 0:
@@ -311,6 +360,7 @@ class GameController:
             self.map_objects.add(new_tower)
 
     def __hide_control_panel(self):
+        self.control_panel_is_hidden = True
         self.control_panel_position_delta = 2
         self.control_panel_position = 600
         self.animation_timer = QtCore.QTimer()
