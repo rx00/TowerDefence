@@ -21,7 +21,7 @@ class EntityBridge:
 
         # Инициализация основного графического объекта
         self.entity_graphic_object = QtEntity(
-            self.entity_logic_object.skin_dir,
+            self.entity_logic_object,
             self.parent
         )
 
@@ -102,35 +102,27 @@ class EntityBridge:
 
 
 class QtBasement(QWidget):
-    def __init__(self, cords, parent=None):
+    def __init__(self, cords, run_method, parent=None):
         super(QtBasement, self).__init__(parent)
         self.move(*cords)
-        self.non_active = QPixmap("assets/install_transparent.png")
-        self.active = QPixmap("assets/install_active.png")
-        self.current_pixmap = self.non_active
-        self.clicked = False
+        self.current_pixmap = QPixmap("assets/install_active.png")
+        self.method = run_method
 
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.drawPixmap(event.rect(), self.current_pixmap)
 
     def mousePressEvent(self, event):
-        if self.clicked:
-            self.current_pixmap = self.non_active
-            self.clicked = False
-        else:
-            self.current_pixmap = self.active
-            self.clicked = True
-        self.repaint()
+        self.method(self)
 
     def sizeHint(self):
         return self.current_pixmap.size()
 
 
 class QtEntity(QWidget):
-    def __init__(self, skin_dir, parent=None):
+    def __init__(self, logic_obj_link: Entity, parent=None):
         super(QtEntity, self).__init__(parent)
-        self.pixmap = QPixmap(skin_dir)
+        self.pixmap = QPixmap(logic_obj_link.skin_dir)
 
     def paintEvent(self, event):
         painter = QPainter(self)

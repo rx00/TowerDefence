@@ -2,8 +2,8 @@ from entities.entity import Entity
 
 
 class MovingEntity(Entity):
-    def __init__(self, uuid, road_map: tuple):
-        super().__init__(uuid)
+    def __init__(self, road_map: tuple):
+        super().__init__()
         self.speed = 1
         self.road_map = road_map  # ((x, y), (x, y),... (x, y))
         self.distance = 0

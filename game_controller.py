@@ -1,4 +1,4 @@
-from PyQt5 import QtGui
+from PyQt5 import QtGui, QtCore
 from PyQt5.QtWidgets import QWidget, QLabel
 
 from ImageButton import register_button
@@ -13,7 +13,6 @@ import configparser
 
 class GameController:
     def __init__(self, main_window_link: QWidget, map_file):
-        self.uuids = 3
         self.app = main_window_link
         self.map_name = None
         self.map_background = None
@@ -21,23 +20,29 @@ class GameController:
         self.health = 100
         self.money = 0
 
-        # Init objects
+        self.map_objects = set()
+
+        # Пре-инициализация карты и ее параметров
         try:
             self.unzip_map(map_file)
         except ValueError as e:
             raise GameControllerError(
-                "Ошибка при инициализации карты: {}".format(e))
+                "Ошибка при инициализации карты: {}".format(e)
+            )
+        self.init_logic_map()
+        self.init_basements()
         self.set_window_background()
         self.init_gui_elements()
+        self.init_control_panel()
 
     def init_gui_elements(self):
-        # Init status bar
+        # Инициализация статус-бара
         self.status_bar_label = QLabel(self.app)
         pixmap = QtGui.QPixmap("assets/status_bar.png")
         self.status_bar_label.setPixmap(pixmap)
         self.status_bar_label.move(10, 10)
 
-        # Init text labels
+        # Инициализация текстовых полей
         self.health_bar = QLabel(self.status_bar_label)
         self.money_bar = QLabel(self.status_bar_label)
 
@@ -50,7 +55,7 @@ class GameController:
         self.health_bar.setStyleSheet(font_description)
         self.money_bar.setStyleSheet(font_description)
 
-        # Init buttons
+        # Инициализация кнопок
         self.pause_button = register_button(
             (740, 10),
             ["assets/button_stop.png", "assets/button_stop.png"],
@@ -83,7 +88,7 @@ class GameController:
         )
         self.speed_down_button.resize(40, 40)
 
-        # Show labels
+        # Инициализация изначального отображения элементов GUI
         self.status_bar_label.show()
         self.health_bar.show()
         self.money_bar.show()
@@ -179,8 +184,6 @@ class GameController:
                                json.loads(main_config["road_map"])
                                ])
         self.money = int(main_config["balance"])
-        self.init_logic_map()
-        self.init_figures()
 
     def init_logic_map(self):
         """
@@ -189,20 +192,13 @@ class GameController:
         road_map = RoadMap(self.road_map)
         self.road_map = road_map.step_map
 
-    def init_figures(self):  # TODO вынести нахер
-        self.obj2 = EntityBridge(Entity(2), self.app, static=True)
-        self.obj2.entity_logic_object.on_entity_kill_event.add(self.add_money)
-        self.obj2.entity_logic_object.coordinates = (300, 50)
-        self.basement = QtBasement((300, 20), self.app)
-        self.basement.show()
-        self.obj2.entity_logic_object.attack_range = 200
-        self.obj2.entity_logic_object.attack_strength = 20
-        self.obj3 = EntityBridge(Entity(1), self.app, static=True)
-        self.obj3.entity_logic_object.on_entity_kill_event.add(self.add_money)
-        self.obj3.entity_logic_object.coordinates = (210, 200)
-        self.obj3.entity_logic_object.attack_range = 200
-
-        self.obj3.entity_logic_object.attack_strength = 20
+    def init_basements(self):  # TODO вынести в инициализацию карты
+        self.basement2 = QtBasement((300, 50), self.show_control_panel, self.app)
+        self.basement2.show()
+        self.basement1 = QtBasement((300, 250), self.show_control_panel, self.app)
+        self.basement1.show()
+        self.basement3 = QtBasement((210, 200), self.show_control_panel, self.app)
+        self.basement3.show()
 
     def on_tick(self):
         for entity in list(EntityBridge.entities.keys()):
@@ -210,8 +206,7 @@ class GameController:
         self.clear_entities()
 
         if self.app.add_on_tick:
-            self.uuids += 1
-            a = EntityBridge(MovingEntity(self.uuids, self.road_map), self.app)
+            a = EntityBridge(MovingEntity(self.road_map), self.app)
             a.entity_logic_object.speed = 3
             a.entity_logic_object.on_end_of_route_event.\
                 add(self.decrease_health)
@@ -231,6 +226,108 @@ class GameController:
                      QtGui.QBrush(pixmap))
         self.app.setPalette(pal)
         self.app.autoFillBackground()
+
+    def init_control_panel(self):
+        self.control_panel_position = 800
+        self.control_panel_position_delta = -1
+        self.control_panel = QLabel(self.app)
+        self.control_panel.setGeometry(self.control_panel_position, 0, 250, 500)
+        self.control_panel\
+            .setStyleSheet("background-color: rgba(0, 0, 0, 200);")
+        self.control_panel.show()
+
+        self.close_control_panel = register_button(
+            (10,10),
+            [
+                "assets/close_control.png",
+                "assets/close_control.png"
+            ],
+            self.control_panel,
+            self.__hide_control_panel
+        )
+        self.close_control_panel.show()
+
+    def show_control_panel(self, qt_object_link):
+
+        self.control_panel_position_delta = -2
+        self.control_panel_position = 800
+        self.set_pause()
+
+        if isinstance(qt_object_link, QtBasement):
+            self.last_basement = qt_object_link
+            self.cannon_bt = register_button(
+                (25, 100),
+                [
+                    "assets/cannon_img.png",
+                    "assets/cannon_img.png"
+                ],
+                self.control_panel,
+                self.set_cannon
+            )
+
+            self.gendalf_bt = register_button(
+                (25, 170),
+                [
+                    "assets/gendalf_img.png",
+                    "assets/gendalf_img.png"
+                ],
+                self.control_panel,
+                self.__hide_control_panel
+            )
+
+            self.golem_bt = register_button(
+                (25, 240),
+                [
+                    "assets/golem_img.png",
+                    "assets/golem_img.png"
+                ],
+                self.control_panel,
+                self.__hide_control_panel
+            )
+
+            self.cannon_bt.show()
+            self.gendalf_bt.show()
+            self.golem_bt.show()
+
+        self.animation_timer = QtCore.QTimer()
+        self.animation_timer.timeout\
+            .connect(self.change_control_panel_position)
+        self.animation_timer.start(1)
+
+    def set_cannon(self):
+        if self.money - 20 >= 0:
+            self.money -= 20
+            self.money_bar.setText(str(self.money))
+            q_basement_cords = (self.last_basement.x(), self.last_basement.y())
+            self.last_basement.deleteLater()
+            new_tower = EntityBridge(Entity(), self.app, static=True)
+            new_tower.entity_logic_object.coordinates = q_basement_cords
+            new_tower.tick()
+            new_tower.entity_logic_object.attack_range = 200
+            new_tower.entity_logic_object.attack_strength = 20
+            new_tower.entity_logic_object.on_entity_kill_event.add(
+                self.add_money
+            )
+            self.map_objects.add(new_tower)
+
+    def __hide_control_panel(self):
+        self.control_panel_position_delta = 2
+        self.control_panel_position = 600
+        self.animation_timer = QtCore.QTimer()
+        self.animation_timer.timeout\
+            .connect(self.change_control_panel_position)
+        self.animation_timer.start(1)
+
+    def change_control_panel_position(self):
+        if 600 <= self.control_panel_position <= 800:
+            self.play_button.repaint()
+            self.speed_up_button.repaint()
+            self.speed_down_button.repaint()
+            self.pause_button.repaint()
+            self.control_panel_position += self.control_panel_position_delta
+            self.control_panel.move(self.control_panel_position, 0)
+        else:
+            self.animation_timer.stop()
 
 
 class GameControllerError(Exception):

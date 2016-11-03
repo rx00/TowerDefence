@@ -5,14 +5,13 @@ import unittest
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              os.path.pardir))
 
-
 from entities.moving_entity import Entity, MovingEntity
 from road_map import RoadMap
 
 
 class EntityTests(unittest.TestCase):
-    new_entity = Entity(1)
-    another_entity = Entity(2)
+    new_entity = Entity()
+    another_entity = Entity()
 
     def test_entity_damage(self):
         """
@@ -62,19 +61,20 @@ class EntityTests(unittest.TestCase):
             self.assertEqual(self.found_uuid, 0)
 
     def test_spawning(self):
-        new_entity = Entity(3)
+        new_entity = Entity()
         current_entity_uuid = new_entity.uuid
         new_entity.set_friendly()
-        new_entity.get_damage(150, 2)
+        new_entity.get_damage(150, self.another_entity.uuid)
         self.assertFalse(current_entity_uuid in Entity.entities)
 
-    def test_bad_uuid(self):
-        with self.assertRaises(KeyError):
-            bad_entity = Entity(1)
-
     def test_bad_cords(self):
-        with self.assertRaises(ValueError):
-            self.new_entity.coordinates = [[-1]]
+        with self.subTest("Bad types"):
+            with self.assertRaises(ValueError):
+                self.new_entity.coordinates = [[-1]]
+
+        with self.subTest("Big length"):
+            with self.assertRaises(ValueError):
+                self.new_entity.coordinates = (1, 2, 3)
 
     def test_friendships(self):
         self.another_entity.set_friendly()
@@ -83,7 +83,9 @@ class EntityTests(unittest.TestCase):
         self.assertFalse(self.another_entity.uuid in Entity.friends)
 
     def test_cast_effect(self):
-        self.new_entity.cast_effect(2, "Regeneration", 10, 2)
+        self.new_entity.cast_effect(
+            self.another_entity.uuid, "Regeneration", 10, 2
+        )
         with self.subTest("Test effect casting"):
             self.assertTrue(
                 len(self.another_entity.effect_objects) == 1
@@ -113,7 +115,7 @@ class EntityTests(unittest.TestCase):
 
     def test_moving_entity(self):
         waypoints = RoadMap(((1, 1), (5, 5)))
-        moving_entity = MovingEntity(4, waypoints.step_map)
+        moving_entity = MovingEntity(waypoints.step_map)
         moving_entity_uuid = moving_entity.uuid
         moving_entity.tick()
         with self.subTest("Test moving"):

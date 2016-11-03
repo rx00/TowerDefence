@@ -7,13 +7,12 @@ class Entity:
 
     entities = {}
     friends = set()
-    last_attack_uuid = -1
 
-    def __init__(self, uuid):
-        self.uuid = uuid
-        if uuid in self.entities:
-            raise KeyError("Another entity has this ({}) UUID".format(uuid))
-        self.entities[uuid] = self
+    def __init__(self):
+        self.uuid = id(self)
+        if self.uuid in self.entities:
+            raise KeyError("Another entity has this ({}) UUID".format(self.uuid))
+        self.entities[self.uuid] = self
         self.skin_dir = "assets/tower.png"
 
         self.__coordinates = ()
@@ -169,12 +168,10 @@ class Entity:
 
     def summon_attacking_entity(self, target_uuid):
         new_attack = AttackEntity(
-            self.last_attack_uuid,
             self.uuid,
             target_uuid
         )
         self.on_attack_summoning(new_attack.uuid)
-        self.last_attack_uuid -= 1
 
     def effect_tick(self):
         """
@@ -208,8 +205,8 @@ class Entity:
 
 
 class AttackEntity(Entity):
-    def __init__(self, uuid, parent_id, target_id):
-        super().__init__(uuid)
+    def __init__(self, parent_id, target_id):
+        super().__init__()
 
         self.distance = 0
         self.coordinates = self.entities[parent_id].coordinates

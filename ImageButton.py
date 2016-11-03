@@ -39,7 +39,7 @@ class HoverImageButton(ImageButton):
         self.mouseHover.emit(False)
 
 
-def register_button(coords, image_list, app_link, run_method_link):
+def register_button(coords, image_list, app_link, run_method_link, args=None):
     """
     :param coords: кортеж координат кнопки (x, y)
     :param image_list: список изображений кнопки, 2 - статика + клик, 3 + hover
