@@ -31,5 +31,6 @@ class MovingEntity(Entity):
             func(despawn_uuid)
 
     def tick(self):
+        self.effect_tick()
         self.do_move()
         # self.do_attack()

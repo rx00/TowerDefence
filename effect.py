@@ -7,6 +7,7 @@ class Effect:
         self.effect_strength = strength + 1
         self.effect_durability = durability
         self.effect_method_link = self.available_effects[effect_id]
+        self.on_effect_remove_event = {}
 
     @property
     def available_effects(self):
@@ -15,9 +16,6 @@ class Effect:
             "Regeneration": self.regeneration,
             "Poison": self.poison,
             "InstantDamage": self.instant_damage,
-            "Fire": self.fire,
-            "FireResistance": self.fire_resistance,
-            "Swiftness": self.swiftness,
             "Slowness": self.slowness,
             "BloodMagic": self.blood_magic
         }
@@ -29,22 +27,16 @@ class Effect:
         self.owner.heal(1 * self.effect_strength)
 
     def poison(self):
-        self.owner.health_points -= 1 * self.effect_strength
+        self.owner.health_points = max(
+            1,
+            self.owner.health_points - self.effect_strength
+        )
 
     def instant_damage(self):
         self.owner.health_points -= 20 * self.effect_strength
 
-    def fire(self):
-        self.owner.health_points -= 1 * self.effect_strength
-
-    def fire_resistance(self):
-        pass
-
-    def swiftness(self):
-        pass
-
     def slowness(self):
-        pass
+        self.owner.speed = max(1, self.owner.speed // self.effect_strength)
 
     def blood_magic(self):
         self.owner.health_points -= 1
@@ -52,9 +44,14 @@ class Effect:
 
     def tick(self):
         self.effect_durability -= 1
-        if self.effect_durability < 1 or\
-                not self.caller.health_points <= 0 or\
-                not self.owner.health_points <= 0:
+        if self.effect_durability < 1:
             self.owner.effect_objects.remove(self)
         else:
-            self.effect_method_link()
+            try:
+                self.effect_method_link()
+            except KeyError:
+                self.owner.effect_objects.remove(self)
+
+    def on_effect_remove(self):
+        for event in self.on_effect_remove_event.values():
+            event()

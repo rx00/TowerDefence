@@ -11,7 +11,8 @@ class Entity:
     def __init__(self):
         self.uuid = id(self)
         if self.uuid in self.entities:
-            raise KeyError("Another entity has this ({}) UUID".format(self.uuid))
+            raise KeyError("Another entity has this ({}) UUID"
+                           .format(self.uuid))
         self.entities[self.uuid] = self
         self.skin_dir = "assets/tower.png"
 

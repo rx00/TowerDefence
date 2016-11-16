@@ -1,0 +1,8 @@
+# Created by .ignore support plugin (hsz.mobi)
+.coverage
+.gitignore
+.idea/
+__pycache__/
+entities/__pycache__/
+tests/.coverage
+tests/__pycache__/
