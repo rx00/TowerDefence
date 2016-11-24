@@ -1,6 +1,7 @@
 import random
-from qt_entity_bridge import EntityBridge
-from entities.moving_entity import MovingEntity
+
+from entities.entities_logic.moving_entity import MovingEntity
+from entities.qt_entity_bridge import EntityBridge
 
 
 class WaveController:

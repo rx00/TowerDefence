@@ -1,15 +1,15 @@
+import configparser
+import json
+import zipfile
+
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtWidgets import QWidget, QLabel
 
 from ImageButton import register_button
+from controllers.wave_controller import WaveController
+from entities.entities_logic.figures import Gendalf, Cannon, Entity
+from entities.qt_entity_bridge import EntityBridge, QtBasement
 from road_map import RoadMap
-from entities.figures import Gendalf, Cannon, Entity
-from qt_entity_bridge import EntityBridge, QtBasement
-from wave_controller import WaveController
-
-import json
-import zipfile
-import configparser
 
 
 class GameController:
@@ -362,8 +362,7 @@ class GameController:
         if self.money - 150 >= 0:
             self.money -= 150
             self.money_bar.setText(str(self.money))
-            q_basement_cords = (
-            self.last_basement.x(), self.last_basement.y())
+            q_basement_cords = (self.last_basement.x(), self.last_basement.y())
             new_tower = EntityBridge(Gendalf(), self.app, static=True)
             new_tower.entity_logic_object.coordinates = q_basement_cords
             self.last_basement.deleteLater()

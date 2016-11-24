@@ -1,5 +1,5 @@
 # Kings vs Zombies, main object
-from effect import Effect
+from entities.entities_logic.effect import Effect
 from road_map import RoadMap
 
 

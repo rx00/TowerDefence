@@ -3,6 +3,6 @@
 .gitignore
 .idea/
 __pycache__/
-entities/__pycache__/
+entities/entities_logic/__pycache__/
 tests/.coverage
 tests/__pycache__/

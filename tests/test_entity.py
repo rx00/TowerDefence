@@ -5,7 +5,7 @@ import unittest
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              os.path.pardir))
 
-from entities.moving_entity import Entity, MovingEntity
+from entities.entities_logic.moving_entity import Entity, MovingEntity
 from road_map import RoadMap
 
 

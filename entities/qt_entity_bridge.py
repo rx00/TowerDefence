@@ -1,6 +1,7 @@
 from PyQt5.QtGui import QPainter, QPixmap
 from PyQt5.QtWidgets import QWidget, QFrame
-from entities.entity import Entity
+
+from entities.entities_logic.entity import Entity
 
 
 class EntityBridge:
@@ -150,13 +151,21 @@ class QtHealth(QWidget):
         self.update_health_color(graphic_health)
 
     def update_health_color(self, health):
-        comparator = {
-            17: "GreenYellow",
-            14: "Yellow",
-            9: "Orange",
-            4: "Red"
-        }
-        if health in comparator:
-            self.rectangle.setStyleSheet(
-                "QWidget { background-color: %s }" % comparator[health]
-            )
+        self.rectangle.setStyleSheet(
+            "QWidget { background-color: %s }" %
+            self.get_health_color(health)
+        )
+
+    @staticmethod
+    def get_health_color(amt):
+        if amt >= 20:
+            return "Green"
+        if amt >= 14:
+            return "GreenYellow"
+        if amt >= 9:
+            return "Yellow"
+        if amt >= 4:
+            return "Orange"
+        if amt >= 0:
+            return "Red"
+        return "Black"

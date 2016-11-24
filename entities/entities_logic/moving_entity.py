@@ -1,4 +1,4 @@
-from entities.entity import Entity
+from entities.entities_logic.entity import Entity
 
 
 class MovingEntity(Entity):

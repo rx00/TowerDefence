@@ -6,7 +6,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QApplication, QDesktopWidget
 
 from ImageButton import register_button
-from game_controller import GameController
+from controllers.game_controller import GameController
 
 
 class MainWindow(QWidget):
