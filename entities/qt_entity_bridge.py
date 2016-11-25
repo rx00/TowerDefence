@@ -1,5 +1,6 @@
 from PyQt5.QtGui import QPainter, QPixmap
 from PyQt5.QtWidgets import QWidget, QFrame
+from PyQt5.QtCore import QSize
 
 from entities.entities_logic.entity import Entity
 
@@ -104,7 +105,7 @@ class EntityBridge:
 
 class QtBasement(QWidget):
     def __init__(self, cords, run_method, parent=None):
-        super(QtBasement, self).__init__(parent)
+        super().__init__(parent)
         self.move(*cords)
         self.current_pixmap = QPixmap("assets/install_active.png")
         self.method = run_method
@@ -122,23 +123,52 @@ class QtBasement(QWidget):
 
 class QtEntity(QWidget):
     def __init__(self, logic_obj_link: Entity, parent=None):
-        super(QtEntity, self).__init__(parent)
+        super().__init__(parent)
+        self.parent = parent
         self.pixmap = QPixmap(logic_obj_link.skin_dir)
+        self.on_press = None
 
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.drawPixmap(event.rect(), self.pixmap)
 
     def mousePressEvent(self, event):
-        pass
+        if self.on_press:
+            self.on_press(self.x(), self.y())
 
     def sizeHint(self):
         return self.pixmap.size()
 
 
+class QtManagePanel(QWidget):
+    def __init__(self, x, y, parent=None):
+        super().__init__(parent)
+        self.X = x
+        self.Y = y
+        self.circle = QFrame(parent)
+        self.circle.move(self.X - 28, self.Y - 28)
+        self.circle.setBaseSize(70, 70)
+        self.circle.setStyleSheet('''
+                 background-color: rgba(0, 0, 0, 200);
+                 border-style: solid;
+                 border-width:3px;
+                 border-radius:37px;
+                 border-color: rgba(127, 127, 127, 200);
+                 max-width:74;
+                 max-height:74;
+                 min-width:74;
+                 min-height:74;
+                 ''')
+        self.circle.show()
+
+    def clear(self):
+        self.circle.deleteLater()
+        self.deleteLater()
+
+
 class QtHealth(QWidget):
     def __init__(self, parent=None):
-        super(QtHealth, self).__init__(parent)
+        super().__init__(parent)
         self.rectangle = QFrame(self)
         self.rectangle.setGeometry(0, 0, 20, 3)
         self.rectangle.setStyleSheet(

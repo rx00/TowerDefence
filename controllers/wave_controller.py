@@ -1,7 +1,6 @@
 import random
 
-from entities.entities_logic.moving_entity import MovingEntity
-from entities.qt_entity_bridge import EntityBridge
+from entities.figures import Zombie
 
 
 class WaveController:
@@ -37,19 +36,10 @@ class WaveController:
             self.current_commands = self.current_commands[1:]
             # типичный зомби
             if command == "zombie":
-                entity = EntityBridge(
-                    MovingEntity(self.road_map),
-                    self.app
-                )
-                entity.entity_logic_object.on_end_of_route_event.add(
+                zombie = Zombie(self.road_map, self.app)
+                zombie.entity_logic_object.on_end_of_route_event.add(
                     self.controller.decrease_health
                 )
-                entity.entity_graphic_object.show()
-                entity.entity_logic_object.speed = 3
-                entity.entity_logic_object.health = 200
-                entity.entity_logic_object.attack_strength += \
-                    random.randint(0, 10)
-                entity.entity_logic_object.wallet = 3 + random.randint(0, 7)
             # конец волны
             elif command == "end":
                 if self.current_wave != len(self.waves_json):

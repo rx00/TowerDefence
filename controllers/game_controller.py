@@ -7,8 +7,9 @@ from PyQt5.QtWidgets import QWidget, QLabel
 
 from ImageButton import register_button
 from controllers.wave_controller import WaveController
-from entities.entities_logic.figures import Gendalf, Cannon, Entity
-from entities.qt_entity_bridge import EntityBridge, QtBasement
+from entities.entities_logic.figures import Entity
+from entities.qt_entity_bridge import EntityBridge, QtManagePanel
+from entities.figures import Cannon, Basement, Gendalf
 from road_map import RoadMap
 
 
@@ -26,6 +27,7 @@ class GameController:
 
         self.is_last_monster = False
         self.wave_controller = None
+        self.manage_panel = None
         # Пре-инициализация карты и ее параметров
         try:
             self.unzip_map(map_file)
@@ -119,10 +121,9 @@ class GameController:
 
     def __get_intence(self):
         self.intence += 1
-        growth = max(min(
-            -(1/5) * (((self.intence - 880) / 25) ** 2) + 250,
-            140),
-            0)
+        growth = max(
+            min(-(1/5) * (((self.intence - 880) / 25) ** 2) + 250, 140), 0
+        )
         if growth > 0:
             self.wave_label.setStyleSheet(
                 "background-color: rgba(255, 255, 200, {});"
@@ -131,6 +132,10 @@ class GameController:
             )
         else:
             self.new_timer.stop()
+            self.wave_label.setStyleSheet(
+                "background-color: rgba(255, 255, 200, 0);"
+                "color: rgba(0, 70, 0, 0);"
+            )
 
     def increase_speed(self):
         self.app.timer.start(15)
@@ -224,7 +229,7 @@ class GameController:
             tuple(cords) for cords in json.loads(main_config["basements"])
         )
         for basement_cord in basement_cords:
-            new_basement = QtBasement(
+            new_basement = Basement(
                 basement_cord, self.show_control_panel, self.app
             )
             new_basement.show()
@@ -295,38 +300,51 @@ class GameController:
         self.close_control_panel.show()
 
     def show_control_panel(self, qt_object_link):
+        cannon_img = "assets/cannon_img.png"
+        gendalf_img = "assets/gendalf_img.png"
+        golem_img = "assets/golem_img.png"
+
+        if self.money < 20:
+            cannon_img = "assets/cannon_img_exp.png"
+        if self.money < 150:
+            gendalf_img = "assets/gendalf_img_exp.png"
+        if self.money < 80:
+            golem_img = "assets/golem_img_exp.png"
+
 
         self.control_panel_position_delta = -2
         self.control_panel_position = 800
         self.set_pause()
 
-        if isinstance(qt_object_link, QtBasement):
+        if isinstance(qt_object_link, Basement):
             self.last_basement = qt_object_link
             self.cannon_bt = register_button(
                 (25, 100),
                 [
-                    "assets/cannon_img.png",
-                    "assets/cannon_img.png"
+                    cannon_img,
+                    cannon_img
                 ],
                 self.control_panel,
-                self.set_cannon
+                lambda _, fig_type=Cannon, money=20:
+                    self.set_figure(fig_type, money)
             )
 
             self.gendalf_bt = register_button(
                 (25, 170),
                 [
-                    "assets/gendalf_img.png",
-                    "assets/gendalf_img.png"
+                    gendalf_img,
+                    gendalf_img
                 ],
                 self.control_panel,
-                self.set_gendalf
+                lambda _, fig_type=Gendalf, money=150:
+                    self.set_figure(fig_type, money)
             )
 
             self.golem_bt = register_button(
                 (25, 240),
                 [
-                    "assets/golem_img.png",
-                    "assets/golem_img.png"
+                    golem_img,
+                    golem_img
                 ],
                 self.control_panel,
                 self.__hide_control_panel
@@ -343,41 +361,34 @@ class GameController:
                 .connect(self.change_control_panel_position)
             self.animation_timer.start(1)
 
-    def set_cannon(self):
-        if self.money - 20 >= 0:
-            self.money -= 20
+    def set_figure(self, figure_type, money):
+        if self.money - money >= 0:
+            self.money -= money
             self.money_bar.setText(str(self.money))
             q_basement_cords = (self.last_basement.x(), self.last_basement.y())
-            new_tower = EntityBridge(Cannon(), self.app, static=True)
+            new_tower = figure_type(self.app)
             new_tower.entity_logic_object.coordinates = q_basement_cords
             self.last_basement.deleteLater()
             new_tower.tick()
             new_tower.entity_logic_object.on_entity_kill_event.add(
                 self.add_money
             )
+            new_tower.entity_graphic_object.on_press = self.show_instruments
             self.map_objects.add(new_tower)
             self.__hide_control_panel()
 
-    def set_gendalf(self):
-        if self.money - 150 >= 0:
-            self.money -= 150
-            self.money_bar.setText(str(self.money))
-            q_basement_cords = (self.last_basement.x(), self.last_basement.y())
-            new_tower = EntityBridge(Gendalf(), self.app, static=True)
-            new_tower.entity_logic_object.coordinates = q_basement_cords
-            self.last_basement.deleteLater()
-            new_tower.tick()
-            new_tower.entity_logic_object.on_entity_kill_event.add(
-                self.add_money
-            )
-            self.map_objects.add(new_tower)
-            self.__hide_control_panel()
+    def show_instruments(self, at_x, at_y):
+        if self.manage_panel:
+            self.manage_panel.clear()
+        self.manage_panel = QtManagePanel(at_x, at_y, self.app)
+        self.manage_panel.show()
+        # TODO delete button
+
 
     def __hide_control_panel(self):
         self.cannon_bt.disconnect()
         self.gendalf_bt.disconnect()
         self.golem_bt.disconnect()
-
         self.control_panel_is_hidden = True
         self.control_panel_position_delta = 2
         self.control_panel_position = 600

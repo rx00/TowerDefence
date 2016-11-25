@@ -1,4 +1,5 @@
 from entities.entities_logic.entity import Entity
+from entities.entities_logic.moving_entity import MovingEntity
 
 
 class Cannon(Entity):
@@ -50,3 +51,8 @@ class Gendalf(Entity):
     def cast_effects(self, uuid):
         self.cast_effect(uuid, "Slowness", 10, 3)
         self.cast_effect(uuid, "Poison", 10, 3)
+
+
+class Zombie(MovingEntity):
+    def __init__(self, road_map):
+        super().__init__(road_map)
