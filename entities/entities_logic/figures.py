@@ -6,7 +6,7 @@ class Cannon(Entity):
     def __init__(self):
         super().__init__()
         self.attack_range = 200
-        self.attack_strength = 20
+        self.attack_strength = 10
         self.skin_dir = "assets/tower.png"
         self.set_friendly()
 

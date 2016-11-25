@@ -382,8 +382,18 @@ class GameController:
             self.manage_panel.clear()
         self.manage_panel = QtManagePanel(at_x, at_y, self.app)
         self.manage_panel.show()
+        print(at_x,at_y)
+        self.delete_button = register_button(
+            (10, 10),
+            [
+                "assets/delete_tower.png",
+                "assets/delete_tower.png"
+            ],
+            self.manage_panel,
+            self.manage_panel.show
+        )
+        self.delete_button.show()
         # TODO delete button
-
 
     def __hide_control_panel(self):
         self.cannon_bt.disconnect()

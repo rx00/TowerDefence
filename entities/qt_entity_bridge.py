@@ -146,8 +146,7 @@ class QtManagePanel(QWidget):
         self.X = x
         self.Y = y
         self.circle = QFrame(parent)
-        self.circle.move(self.X - 28, self.Y - 28)
-        self.circle.setBaseSize(70, 70)
+        self.circle.setGeometry(self.X - 28, self.Y - 28, 70, 70)
         self.circle.setStyleSheet('''
                  background-color: rgba(0, 0, 0, 200);
                  border-style: solid;
