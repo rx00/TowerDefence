@@ -393,16 +393,29 @@ class GameController:
             self.manage_panel,
             lambda _, tower=tower_obj: self.delete_tower(tower)
         )
+
+        self.close_instruments = register_button(
+            (58, 5),
+            [
+                "assets/close_tower_menu.png",
+                "assets/close_tower_menu.png"
+            ],
+            self.manage_panel,
+            lambda _: self.clear_manage_panel()
+        )
+        self.close_instruments.show()
         self.delete_button.show()
 
-    def delete_tower(self, tower):
+    def clear_manage_panel(self):
         self.manage_panel.clear()
         self.manage_panel = None
+
+    def delete_tower(self, tower):
+        self.clear_manage_panel()
         tower_cords = tower.entity_logic_object.coordinates
         tower.pop()
         basement = Basement(tower_cords, self.show_control_panel, self.app)
         basement.show()
-
 
     def __hide_control_panel(self):
         self.cannon_bt.disconnect()
