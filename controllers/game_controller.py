@@ -373,27 +373,36 @@ class GameController:
             new_tower.entity_logic_object.on_entity_kill_event.add(
                 self.add_money
             )
-            new_tower.entity_graphic_object.on_press = self.show_instruments
+            new_tower.entity_graphic_object.on_press = \
+                lambda tower=new_tower: self.show_instruments(tower)
             self.map_objects.add(new_tower)
             self.__hide_control_panel()
 
-    def show_instruments(self, at_x, at_y):
+    def show_instruments(self, tower_obj: EntityBridge):
+        at_x, at_y = tower_obj.entity_logic_object.coordinates
         if self.manage_panel:
             self.manage_panel.clear()
         self.manage_panel = QtManagePanel(at_x, at_y, self.app)
         self.manage_panel.show()
-        print(at_x,at_y)
         self.delete_button = register_button(
-            (10, 10),
+            (10, 25),
             [
                 "assets/delete_tower.png",
                 "assets/delete_tower.png"
             ],
             self.manage_panel,
-            self.manage_panel.show
+            lambda _, tower=tower_obj: self.delete_tower(tower)
         )
         self.delete_button.show()
-        # TODO delete button
+
+    def delete_tower(self, tower):
+        self.manage_panel.clear()
+        self.manage_panel = None
+        tower_cords = tower.entity_logic_object.coordinates
+        tower.pop()
+        basement = Basement(tower_cords, self.show_control_panel, self.app)
+        basement.show()
+
 
     def __hide_control_panel(self):
         self.cannon_bt.disconnect()

@@ -1,6 +1,5 @@
 from PyQt5.QtGui import QPainter, QPixmap
 from PyQt5.QtWidgets import QWidget, QFrame
-from PyQt5.QtCore import QSize
 
 from entities.entities_logic.entity import Entity
 
@@ -134,7 +133,7 @@ class QtEntity(QWidget):
 
     def mousePressEvent(self, event):
         if self.on_press:
-            self.on_press(self.x(), self.y())
+            self.on_press()
 
     def sizeHint(self):
         return self.pixmap.size()
@@ -142,11 +141,10 @@ class QtEntity(QWidget):
 
 class QtManagePanel(QWidget):
     def __init__(self, x, y, parent=None):
-        super().__init__(parent)
-        self.X = x
-        self.Y = y
         self.circle = QFrame(parent)
-        self.circle.setGeometry(self.X - 28, self.Y - 28, 70, 70)
+        self.circle.setGeometry(x - 28, y - 28, 70, 70)
+        super().__init__(parent)
+        self.setGeometry(x - 28, y - 28, 70, 70)
         self.circle.setStyleSheet('''
                  background-color: rgba(0, 0, 0, 200);
                  border-style: solid;
@@ -158,6 +156,7 @@ class QtManagePanel(QWidget):
                  min-width:74;
                  min-height:74;
                  ''')
+        self.show()
         self.circle.show()
 
     def clear(self):
