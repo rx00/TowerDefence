@@ -2,6 +2,7 @@ from entities.entities_logic import figures as logic
 from entities.qt_entity_bridge import EntityBridge
 from entities.qt_entity_bridge import QtBasement as Basement
 
+
 import random
 
 

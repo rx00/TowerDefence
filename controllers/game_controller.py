@@ -11,6 +11,7 @@ from entities.entities_logic.figures import Entity
 from entities.qt_entity_bridge import EntityBridge, QtManagePanel
 from entities.figures import Cannon, Basement, Gendalf
 from road_map import RoadMap
+from controllers.control_panel_gui import ControlPanel
 
 
 class GameController:
@@ -38,7 +39,6 @@ class GameController:
         self.init_logic_map()
         self.set_window_background()
         self.init_gui_elements()
-        self.init_control_panel()
         self.init_wave_controller()
 
     def init_gui_elements(self):
@@ -137,28 +137,6 @@ class GameController:
                 "color: rgba(0, 70, 0, 0);"
             )
 
-    def increase_speed(self):
-        self.app.timer.start(15)
-        self.speed_up_button.hide()
-        self.speed_down_button.show()
-
-    def decrease_speed(self):
-        self.app.timer.start(30)
-        self.speed_down_button.hide()
-        self.speed_up_button.show()
-
-    def set_pause(self):
-        self.app.timer.stop()
-        self.pause_button.hide()
-        self.play_button.show()
-
-    def set_play(self):
-        self.app.timer.start(30)
-        self.speed_down_button.hide()
-        self.speed_up_button.show()
-        self.play_button.hide()
-        self.pause_button.show()
-
     def decrease_health(self, entity_uuid):
         damage = Entity.entities[entity_uuid].attack_strength
         self.health -= damage
@@ -230,7 +208,7 @@ class GameController:
         )
         for basement_cord in basement_cords:
             new_basement = Basement(
-                basement_cord, self.show_control_panel, self.app
+                basement_cord, lambda base: ControlPanel(self, base), self.app
             )
             new_basement.show()
             self.basements.add(new_basement)
@@ -276,108 +254,6 @@ class GameController:
         self.app.setPalette(pal)
         self.app.autoFillBackground()
 
-    def init_control_panel(self):
-        self.control_panel_position = 800
-        self.control_panel_position_delta = -1
-        self.control_panel = QLabel(self.app)
-        self.control_panel.setGeometry(
-            self.control_panel_position, 0, 250, 500
-        )
-        self.control_panel\
-            .setStyleSheet("background-color: rgba(0, 0, 0, 200);")
-        self.control_panel.show()
-
-        self.close_control_panel = register_button(
-            (10,10),
-            [
-                "assets/close_control.png",
-                "assets/close_control.png"
-            ],
-            self.control_panel,
-            self.__hide_control_panel
-        )
-        self.control_panel_is_hidden = True
-        self.close_control_panel.show()
-
-    def show_control_panel(self, qt_object_link):
-        cannon_img = "assets/cannon_img.png"
-        gendalf_img = "assets/gendalf_img.png"
-        golem_img = "assets/golem_img.png"
-
-        if self.money < 20:
-            cannon_img = "assets/cannon_img_exp.png"
-        if self.money < 150:
-            gendalf_img = "assets/gendalf_img_exp.png"
-        if self.money < 80:
-            golem_img = "assets/golem_img_exp.png"
-
-
-        self.control_panel_position_delta = -2
-        self.control_panel_position = 800
-        self.set_pause()
-
-        if isinstance(qt_object_link, Basement):
-            self.last_basement = qt_object_link
-            self.cannon_bt = register_button(
-                (25, 100),
-                [
-                    cannon_img,
-                    cannon_img
-                ],
-                self.control_panel,
-                lambda _, fig_type=Cannon, money=20:
-                    self.set_figure(fig_type, money)
-            )
-
-            self.gendalf_bt = register_button(
-                (25, 170),
-                [
-                    gendalf_img,
-                    gendalf_img
-                ],
-                self.control_panel,
-                lambda _, fig_type=Gendalf, money=150:
-                    self.set_figure(fig_type, money)
-            )
-
-            self.golem_bt = register_button(
-                (25, 240),
-                [
-                    golem_img,
-                    golem_img
-                ],
-                self.control_panel,
-                self.__hide_control_panel
-            )
-
-            self.cannon_bt.show()
-            self.gendalf_bt.show()
-            self.golem_bt.show()
-
-        if self.control_panel_is_hidden:
-            self.control_panel_is_hidden = False
-            self.animation_timer = QtCore.QTimer()
-            self.animation_timer.timeout\
-                .connect(self.change_control_panel_position)
-            self.animation_timer.start(1)
-
-    def set_figure(self, figure_type, money):
-        if self.money - money >= 0:
-            self.money -= money
-            self.money_bar.setText(str(self.money))
-            q_basement_cords = (self.last_basement.x(), self.last_basement.y())
-            new_tower = figure_type(self.app)
-            new_tower.entity_logic_object.coordinates = q_basement_cords
-            self.last_basement.deleteLater()
-            new_tower.tick()
-            new_tower.entity_logic_object.on_entity_kill_event.add(
-                self.add_money
-            )
-            new_tower.entity_graphic_object.on_press = \
-                lambda tower=new_tower: self.show_instruments(tower)
-            self.map_objects.add(new_tower)
-            self.__hide_control_panel()
-
     def show_instruments(self, tower_obj: EntityBridge):
         at_x, at_y = tower_obj.entity_logic_object.coordinates
         if self.manage_panel:
@@ -414,31 +290,32 @@ class GameController:
         self.clear_manage_panel()
         tower_cords = tower.entity_logic_object.coordinates
         tower.pop()
-        basement = Basement(tower_cords, self.show_control_panel, self.app)
+        basement = Basement(
+            tower_cords, lambda base: ControlPanel(self, base), self.app
+        )
         basement.show()
 
-    def __hide_control_panel(self):
-        self.cannon_bt.disconnect()
-        self.gendalf_bt.disconnect()
-        self.golem_bt.disconnect()
-        self.control_panel_is_hidden = True
-        self.control_panel_position_delta = 2
-        self.control_panel_position = 600
-        self.animation_timer = QtCore.QTimer()
-        self.animation_timer.timeout\
-            .connect(self.change_control_panel_position)
-        self.animation_timer.start(1)
+    def increase_speed(self):
+        self.app.timer.start(15)
+        self.speed_up_button.hide()
+        self.speed_down_button.show()
 
-    def change_control_panel_position(self):
-        if 600 <= self.control_panel_position <= 800:
-            self.play_button.repaint()
-            self.speed_up_button.repaint()
-            self.speed_down_button.repaint()
-            self.pause_button.repaint()
-            self.control_panel_position += self.control_panel_position_delta
-            self.control_panel.move(self.control_panel_position, 0)
-        else:
-            self.animation_timer.stop()
+    def decrease_speed(self):
+        self.app.timer.start(30)
+        self.speed_down_button.hide()
+        self.speed_up_button.show()
+
+    def set_pause(self):
+        self.app.timer.stop()
+        self.pause_button.hide()
+        self.play_button.show()
+
+    def set_play(self):
+        self.app.timer.start(30)
+        self.speed_down_button.hide()
+        self.speed_up_button.show()
+        self.play_button.hide()
+        self.pause_button.show()
 
 
 class GameControllerError(Exception):

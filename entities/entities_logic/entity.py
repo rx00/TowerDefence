@@ -32,6 +32,7 @@ class Entity:
         self.speed = 0
 
         self.effect_objects = set()
+        self.attacking_entity_type = AttackEntity
 
         # API
         self.on_despawn_event = set()
@@ -109,8 +110,11 @@ class Entity:
         :param strength: сила эффекта
         :return: кастует эффект на цель
         """
-        self.entities[uuid_target]\
-            .__get_effect(self, effect_id, durability, strength)
+        try:
+            self.entities[uuid_target]\
+                .__get_effect(self, effect_id, durability, strength)
+        except KeyError:
+            pass
 
     def heal(self, health_points: int):
         """
@@ -168,7 +172,7 @@ class Entity:
             self.current_cooldown -= 1
 
     def summon_attacking_entity(self, target_uuid):
-        new_attack = AttackEntity(
+        new_attack = self.attacking_entity_type(
             self.uuid,
             target_uuid
         )

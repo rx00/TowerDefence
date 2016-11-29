@@ -1,5 +1,6 @@
 from PyQt5.QtGui import QPainter, QPixmap
 from PyQt5.QtWidgets import QWidget, QFrame
+from road_map import RoadMap
 
 from entities.entities_logic.entity import Entity
 
@@ -167,10 +168,15 @@ class QtManagePanel(QWidget):
 class QtHealth(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.background_palette = QFrame(self)
         self.rectangle = QFrame(self)
         self.rectangle.setGeometry(0, 0, 20, 3)
         self.rectangle.setStyleSheet(
             "QWidget { background-color: %s }" % "Green"
+        )
+        self.background_palette.setGeometry(-2, -2, 22, 5)
+        self.background_palette.setStyleSheet(
+            "QWidget { background-color: %s }" % "Black"
         )
 
     def on_health_loose(self, health):

@@ -4,6 +4,8 @@ from PyQt5.QtCore import pyqtSignal
 
 
 class ImageButton(QAbstractButton):
+    buttons = set()
+
     def __init__(self, pixmap, parent=None):
         """
         :param pixmap: ссылка на картинку кнопки
@@ -11,11 +13,20 @@ class ImageButton(QAbstractButton):
         :return: объект кнопки
         """
         super(ImageButton, self).__init__(parent)
+        self.buttons.add(self)
         self.pixmap = QPixmap(pixmap)
 
     def change_image(self, pixmap):
         self.pixmap = QPixmap(pixmap)
         self.update()
+
+    @classmethod
+    def repaint_all(cls):
+        for button in list(cls.buttons):
+            try:
+                button.repaint()
+            except RuntimeError:
+                cls.buttons.remove(button)
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -23,6 +34,10 @@ class ImageButton(QAbstractButton):
 
     def sizeHint(self):
         return self.pixmap.size()
+
+    def deleteLater(self):
+        self.buttons.remove(self)
+        super().deleteLater()
 
 
 class HoverImageButton(ImageButton):
