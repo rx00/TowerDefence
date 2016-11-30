@@ -38,8 +38,8 @@ class GameController:
             )
         self.init_logic_map()
         self.set_window_background()
-        self.init_gui_elements()
         self.init_wave_controller()
+        self.init_gui_elements()
 
     def init_gui_elements(self):
         # Инициализация статус-бара
@@ -48,28 +48,23 @@ class GameController:
         self.status_bar_label.setPixmap(pixmap)
         self.status_bar_label.move(10, 10)
 
-        self.wave_label = QLabel(self.app)
-        self.wave_label.setGeometry(350, 25, 100, 25)
-        self.wave_label\
-            .setStyleSheet("background-color: rgba(255, 255, 200, 0);"
-                           "font-family: Comic Sans MS;"
-                           "color: rgba(255, 255, 255, 0);")
-        self.wave_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.wave_label.setText("0")
-        self.wave_label.show()
-
         # Инициализация текстовых полей
         self.health_bar = QLabel(self.status_bar_label)
         self.money_bar = QLabel(self.status_bar_label)
+        self.wave_bar = QLabel(self.status_bar_label)
 
         self.health_bar.setGeometry(50, 5, 40, 20)
         self.money_bar.setGeometry(50, 42, 40, 20)
+        self.wave_bar.setGeometry(20, 79, 60, 20)
 
         self.health_bar.setText(str(self.health))
         self.money_bar.setText(str(self.money))
+        wave_number = "Wave: {}".format(self.wave_controller.current_wave)
+        self.wave_bar.setText(wave_number)
         font_description = "font-family: Comic Sans MS; color: #B6B6B4;"
         self.health_bar.setStyleSheet(font_description)
         self.money_bar.setStyleSheet(font_description)
+        self.wave_bar.setStyleSheet(font_description)
 
         # Инициализация кнопок
         self.pause_button = register_button(
@@ -108,34 +103,10 @@ class GameController:
         self.status_bar_label.show()
         self.health_bar.show()
         self.money_bar.show()
+        self.wave_bar.show()
         self.play_button.hide()
         self.pause_button.show()
         self.speed_up_button.show()
-
-    def show_progressbar_text(self, text):
-        self.wave_label.setText(text)
-        self.intence = 0
-        self.new_timer = QtCore.QTimer()
-        self.new_timer.timeout.connect(self.__get_intence)
-        self.new_timer.start(3)
-
-    def __get_intence(self):
-        self.intence += 1
-        growth = max(
-            min(-(1/5) * (((self.intence - 880) / 25) ** 2) + 250, 140), 0
-        )
-        if growth > 0:
-            self.wave_label.setStyleSheet(
-                "background-color: rgba(255, 255, 200, {});"
-                "color: rgba(0, 70, 0, {});".format(
-                    int(growth), int(growth))
-            )
-        else:
-            self.new_timer.stop()
-            self.wave_label.setStyleSheet(
-                "background-color: rgba(255, 255, 200, 0);"
-                "color: rgba(0, 70, 0, 0);"
-            )
 
     def decrease_health(self, entity_uuid):
         damage = Entity.entities[entity_uuid].attack_strength
@@ -236,6 +207,11 @@ class GameController:
 
         if not self.is_last_monster:
             self.wave_controller.tick()
+            if str(self.wave_controller.current_wave) != \
+                    self.wave_bar.text().split()[1]:
+                self.wave_bar.setText(
+                    "Wave: {}".format(self.wave_controller.current_wave)
+                )
         else:
             print("WIN!")
 

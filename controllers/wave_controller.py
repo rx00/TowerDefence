@@ -45,9 +45,6 @@ class WaveController:
                 if self.current_wave != len(self.waves_json):
                     self.current_wave += 1
                     self.make_command_list()
-                    self.controller.show_progressbar_text(
-                        "Wave {}".format(self.current_wave)
-                    )
                 else:
                     self.controller.is_last_monster = True
             # установить ожидание спавна следующего гада
