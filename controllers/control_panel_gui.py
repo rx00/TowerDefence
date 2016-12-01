@@ -1,19 +1,20 @@
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtCore import QTimer
 from ImageButton import register_button, ImageButton
-from entities.figures import Cannon, Gendalf
+from entities.figures import Cannon, Gendalf, Basement
+from entities.qt_entity_bridge import QtManagePanel
 
 
 class ControlPanel:
     control_pane_exists = False
 
-    def __init__(self, app_link, from_basement):
+    def __init__(self, controller_link, from_basement):
         if not ControlPanel.control_pane_exists:
             ControlPanel.control_pane_exists = True
-            self.controller = app_link
+            self.controller = controller_link
             self.control_panel = QLabel(self.controller.app)
             self.control_panel_position = 800
-            self.last_basement = from_basement
+            self.chosen_basement = from_basement
 
             self.animation_timer = QTimer()
             self.close_control_panel = None
@@ -129,15 +130,79 @@ class ControlPanel:
         if self.controller.money - money >= 0:
             self.controller.money -= money
             self.controller.money_bar.setText(str(self.controller.money))
-            q_basement_cords = (self.last_basement.x(), self.last_basement.y())
+            q_basement_cords = (
+                self.chosen_basement.x(), self.chosen_basement.y()
+            )
             new_tower = figure_type(self.controller.app)
             new_tower.entity_logic_object.coordinates = q_basement_cords
-            self.last_basement.deleteLater()
+            self.chosen_basement.deleteLater()
             new_tower.tick()
             new_tower.entity_logic_object.on_entity_kill_event.add(
                 self.controller.add_money
             )
             new_tower.entity_graphic_object.on_press = \
-                lambda tower=new_tower: self.controller.show_instruments(tower)
+                lambda tower=new_tower: TowerGui(tower, self.controller)
             self.controller.map_objects.add(new_tower)
             self.__hide_control_panel()
+
+
+class TowerGui:
+    gui_link = None
+
+    def __init__(self, tower, controller):
+        if TowerGui.gui_link:
+            TowerGui.gui_link.clear_manage_panel()
+        TowerGui.gui_link = self
+
+        # Init logic
+        self.controller = controller
+        self.app = controller.app
+        self.tower = tower
+        at_x, at_y = self.tower.entity_logic_object.coordinates
+        self.manage_panel = QtManagePanel(at_x, at_y, self.app)
+        self.manage_panel.show()
+
+        # Buttons
+        self.delete_button = None
+        self.close_instruments = None
+
+        # Init buttons
+        self.show_instruments()
+
+    def show_instruments(self):
+        self.delete_button = register_button(
+            (10, 25),
+            [
+                "assets/delete_tower.png",
+                "assets/delete_tower.png"
+            ],
+            self.manage_panel,
+            lambda _, tower=self.tower: self.delete_tower()
+        )
+
+        self.close_instruments = register_button(
+            (58, 5),
+            [
+                "assets/close_tower_menu.png",
+                "assets/close_tower_menu.png"
+            ],
+            self.manage_panel,
+            lambda _: self.clear_manage_panel()
+        )
+        self.close_instruments.show()
+        self.delete_button.show()
+
+    def clear_manage_panel(self):
+        self.manage_panel.clear()
+        TowerGui.gui_link = None
+
+    def delete_tower(self):
+        self.clear_manage_panel()
+        tower_cords = self.tower.entity_logic_object.coordinates
+        self.tower.pop()
+        basement = Basement(
+            tower_cords,
+            lambda base: ControlPanel(self.controller, base),
+            self.app
+        )
+        basement.show()

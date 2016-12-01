@@ -28,7 +28,6 @@ class GameController:
 
         self.is_last_monster = False
         self.wave_controller = None
-        self.manage_panel = None
         # Пре-инициализация карты и ее параметров
         try:
             self.unzip_map(map_file)
@@ -40,6 +39,8 @@ class GameController:
         self.set_window_background()
         self.init_wave_controller()
         self.init_gui_elements()
+        self.app.mousePressEvent = self.mouse_press_event
+        self.on_mouse_press_event = set()
 
     def init_gui_elements(self):
         # Инициализация статус-бара
@@ -107,16 +108,6 @@ class GameController:
         self.play_button.hide()
         self.pause_button.show()
         self.speed_up_button.show()
-
-    def decrease_health(self, entity_uuid):
-        damage = Entity.entities[entity_uuid].attack_strength
-        self.health -= damage
-        self.health_bar.setText(str(self.health))
-
-    def add_money(self, entity_uuid):
-        money = Entity.entities[entity_uuid].wallet
-        self.money += money
-        self.money_bar.setText(str(self.money))
 
     def unzip_map(self, map_file):
         """
@@ -230,56 +221,31 @@ class GameController:
         self.app.setPalette(pal)
         self.app.autoFillBackground()
 
-    def show_instruments(self, tower_obj: EntityBridge):
-        at_x, at_y = tower_obj.entity_logic_object.coordinates
-        if self.manage_panel:
-            self.manage_panel.clear()
-        self.manage_panel = QtManagePanel(at_x, at_y, self.app)
-        self.manage_panel.show()
-        self.delete_button = register_button(
-            (10, 25),
-            [
-                "assets/delete_tower.png",
-                "assets/delete_tower.png"
-            ],
-            self.manage_panel,
-            lambda _, tower=tower_obj: self.delete_tower(tower)
-        )
-
-        self.close_instruments = register_button(
-            (58, 5),
-            [
-                "assets/close_tower_menu.png",
-                "assets/close_tower_menu.png"
-            ],
-            self.manage_panel,
-            lambda _: self.clear_manage_panel()
-        )
-        self.close_instruments.show()
-        self.delete_button.show()
-
-    def clear_manage_panel(self):
-        self.manage_panel.clear()
-        self.manage_panel = None
-
-    def delete_tower(self, tower):
-        self.clear_manage_panel()
-        tower_cords = tower.entity_logic_object.coordinates
-        tower.pop()
-        basement = Basement(
-            tower_cords, lambda base: ControlPanel(self, base), self.app
-        )
-        basement.show()
-
     def increase_speed(self):
-        self.app.timer.start(15)
+        self.app.timer.start(8)
         self.speed_up_button.hide()
         self.speed_down_button.show()
 
     def decrease_speed(self):
-        self.app.timer.start(30)
+        self.app.timer.start(15)
         self.speed_down_button.hide()
         self.speed_up_button.show()
+
+    def decrease_health(self, entity_uuid):
+        try:
+            damage = Entity.entities[entity_uuid].attack_strength
+            self.health -= damage
+            self.health_bar.setText(str(self.health))
+        except KeyError:
+            pass
+
+    def add_money(self, entity_uuid):
+        try:
+            money = Entity.entities[entity_uuid].wallet
+            self.money += money
+            self.money_bar.setText(str(self.money))
+        except KeyError:
+            pass
 
     def set_pause(self):
         self.app.timer.stop()
@@ -287,11 +253,16 @@ class GameController:
         self.play_button.show()
 
     def set_play(self):
-        self.app.timer.start(30)
+        self.app.timer.start(15)
         self.speed_down_button.hide()
         self.speed_up_button.show()
         self.play_button.hide()
         self.pause_button.show()
+
+    def mouse_press_event(self, e):
+        x, y = e.pos().x(), e.pos().y()
+        for func in self.on_mouse_press_event:
+            func((x, y))
 
 
 class GameControllerError(Exception):

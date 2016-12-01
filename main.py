@@ -43,7 +43,7 @@ class MainWindow(QWidget):
     def init_game_timer(self, target_method):
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(target_method)
-        self.timer.start(30)
+        self.timer.start(15)
 
     def set_window_background(self, image):
         pal = self.palette()
@@ -61,7 +61,6 @@ class MainWindow(QWidget):
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_Escape:
             self.close()
-
 
 if __name__ == '__main__':
 
