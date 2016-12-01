@@ -2,14 +2,14 @@ import configparser
 import json
 import zipfile
 
-from PyQt5 import QtGui, QtCore
+from PyQt5 import QtGui
 from PyQt5.QtWidgets import QWidget, QLabel
 
 from ImageButton import register_button
 from controllers.wave_controller import WaveController
 from entities.entities_logic.figures import Entity
-from entities.qt_entity_bridge import EntityBridge, QtManagePanel
-from entities.figures import Cannon, Basement, Gendalf
+from entities.qt_entity_bridge import EntityBridge
+from entities.figures import Basement, Golem
 from road_map import RoadMap
 from controllers.control_panel_gui import ControlPanel
 
@@ -53,6 +53,11 @@ class GameController:
         self.health_bar = QLabel(self.status_bar_label)
         self.money_bar = QLabel(self.status_bar_label)
         self.wave_bar = QLabel(self.status_bar_label)
+        self.boss_bar_background = QLabel(self.app)
+        self.boss_bar_health = QLabel(self.app)
+
+        self.boss_bar_background.setGeometry(150, 740, 200, 5)
+        self.boss_bar_health.setGeometry(150, 740, 200, 5)
 
         self.health_bar.setGeometry(50, 5, 40, 20)
         self.money_bar.setGeometry(50, 42, 40, 20)
@@ -100,6 +105,15 @@ class GameController:
         )
         self.speed_down_button.resize(40, 40)
 
+        self.golem_call_button = register_button(
+            (750, 200),
+            ["assets/golem_button.png", "assets/golem_button.png"],
+            self.app,
+            self.set_golem_mode
+        )
+        self.golem_call_button.resize(45, 45)
+        self.golem_call_button.show()
+
         # Инициализация изначального отображения элементов GUI
         self.status_bar_label.show()
         self.health_bar.show()
@@ -108,6 +122,36 @@ class GameController:
         self.play_button.hide()
         self.pause_button.show()
         self.speed_up_button.show()
+
+    def golem_button_image_handler(self):
+        if self.money >= 80:
+            self.golem_call_button.change_image("assets/golem_button.png")
+        else:
+            self.golem_call_button.change_image("assets/golem_inactive.png")
+
+    def set_golem_mode(self):
+        self.on_mouse_press_event.add(self.set_golem)
+
+    def set_golem(self, cords):
+        if self.money >= 80:
+            self.money -= 80
+            self.money_bar.setText(str(self.money))
+            road_map = self.road_map
+            closet_cords = (0, 0, 800, 0)
+            for i, cord in enumerate(road_map):
+                x1, y1 = cord
+                x2, y2 = cords
+                length = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** (1/2)
+                if length <= closet_cords[2]:
+                    closet_cords = (x1, y1, length, i)
+
+            road_map = road_map[:closet_cords[3]]
+            golem = Golem(tuple(reversed(road_map)), self.app)
+            golem.entity_logic_object.on_entity_kill_event.add(
+                self.add_money
+            )
+            self.map_objects.add(golem)
+        self.on_mouse_press_event.clear()
 
     def unzip_map(self, map_file):
         """
@@ -195,6 +239,7 @@ class GameController:
         for entity in list(EntityBridge.entities.keys()):
             EntityBridge.entities[entity].tick()
         self.clear_entities()
+        self.golem_button_image_handler()
 
         if not self.is_last_monster:
             self.wave_controller.tick()
@@ -261,7 +306,7 @@ class GameController:
 
     def mouse_press_event(self, e):
         x, y = e.pos().x(), e.pos().y()
-        for func in self.on_mouse_press_event:
+        for func in list(self.on_mouse_press_event):
             func((x, y))
 
 

@@ -1,6 +1,8 @@
 from entities.entities_logic.entity import Entity, AttackEntity
 from entities.entities_logic.moving_entity import MovingEntity
 
+import random
+
 
 class Cannon(Entity):
     def __init__(self):
@@ -64,3 +66,30 @@ class MagicAttack(AttackEntity):
 class Zombie(MovingEntity):
     def __init__(self, road_map):
         super().__init__(road_map)
+        self.speed = 3
+        self.health = 200
+        self.attack_strength += \
+            random.randint(0, 10)
+        self.wallet = 3 + random.randint(0, 7)
+
+
+class Golem(MovingEntity):
+    def __init__(self, road_map):
+        super().__init__(road_map)
+        self.skin_dir = "assets/golem.png"
+        self.speed = 1
+        self.on_end_of_route_event.clear()
+        self.attack_range = 10
+        self.attack_strength = 40
+        self.health_points = 100
+        self.set_friendly()
+        self.on_entity_attack_event.add(self.back_attack)
+
+    def back_attack(self, uuid):
+        health_loss = Entity.entities[uuid].attack_strength
+        self.get_damage(health_loss // 2, uuid)
+
+    def tick(self):
+        if len(self.road_map) - self.priority >= 120:
+            self.do_move()
+        self.do_attack()

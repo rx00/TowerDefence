@@ -35,7 +35,7 @@ class ControlPanel:
         self.control_panel.show()
 
         self.close_control_panel = register_button(
-            (10,10),
+            (10, 10),
             [
                 "assets/close_control.png",
                 "assets/close_control.png"
@@ -48,14 +48,11 @@ class ControlPanel:
     def show_control_panel(self):
         cannon_img = "assets/cannon_img.png"
         gendalf_img = "assets/gendalf_img.png"
-        golem_img = "assets/golem_img.png"
 
         if self.controller.money < 20:
             cannon_img = "assets/cannon_img_exp.png"
         if self.controller.money < 150:
             gendalf_img = "assets/gendalf_img_exp.png"
-        if self.controller.money < 80:
-            golem_img = "assets/golem_img_exp.png"
 
         self.control_panel_position = 800
         self.controller.set_pause()
@@ -82,19 +79,8 @@ class ControlPanel:
                 self.set_figure(fig_type, money)
         )
 
-        self.golem_bt = register_button(
-            (25, 240),
-            [
-                golem_img,
-                golem_img
-            ],
-            self.control_panel,
-            self.__hide_control_panel
-        )
-
         self.cannon_bt.show()
         self.gendalf_bt.show()
-        self.golem_bt.show()
 
         self.animation_timer.timeout\
             .connect(lambda: self.change_control_panel_position(False))
@@ -103,7 +89,6 @@ class ControlPanel:
     def __hide_control_panel(self):
         self.cannon_bt.disconnect()
         self.gendalf_bt.disconnect()
-        self.golem_bt.disconnect()
         self.control_panel_position = 600
         self.animation_timer = QTimer()
         self.animation_timer.timeout\

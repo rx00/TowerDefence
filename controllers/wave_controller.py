@@ -47,6 +47,14 @@ class WaveController:
                     self.make_command_list()
                 else:
                     self.controller.is_last_monster = True
+            elif command == "boss":
+                boss = Zombie(self.road_map, self.app)
+                boss.entity_logic_object.on_end_of_route_event.add(
+                    self.controller.decrease_health
+                )
+                boss.entity_logic_object.attack_strength = 30
+                boss.entity_logic_object.health_points = 500
+                boss.is_boss = True
             # установить ожидание спавна следующего гада
             elif isinstance(command, int):
                 self.wait = command

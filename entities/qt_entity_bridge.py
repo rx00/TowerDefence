@@ -1,6 +1,5 @@
 from PyQt5.QtGui import QPainter, QPixmap
 from PyQt5.QtWidgets import QWidget, QFrame
-from road_map import RoadMap
 
 from entities.entities_logic.entity import Entity
 
@@ -19,6 +18,7 @@ class EntityBridge:
         self.entities[self.uuid] = self
         self.show_health = show_health
         self.static = static
+        self.is_boss = False
         self.current_attacks = {}
 
         # Инициализация основного графического объекта
@@ -77,14 +77,17 @@ class EntityBridge:
         :param uuid: идентификатор цели атаки
         :return: инициализирует сущность снаряда
         """
-        attack_entity = EntityBridge(
-            Entity.entities[uuid],
-            self.parent,
-            show_health=False
-        )
-        self.current_attacks[uuid] = attack_entity
-        attack_entity.entity_logic_object.on_end_of_route_event.\
-            add(self.pop_attack)
+        try:
+            attack_entity = EntityBridge(
+                Entity.entities[uuid],
+                self.parent,
+                show_health=False
+            )
+            self.current_attacks[uuid] = attack_entity
+            attack_entity.entity_logic_object.on_end_of_route_event.\
+                add(self.pop_attack)
+        except KeyError:
+            pass
 
     def pop_attack(self, attack_uuid):
         """

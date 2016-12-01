@@ -17,7 +17,6 @@ class Entity:
         self.skin_dir = "assets/tower.png"
 
         self.__coordinates = ()
-        self.is_dead = False
 
         self.max_health_points = 100
         self.health_points = 100
@@ -30,6 +29,7 @@ class Entity:
 
         self.danger_rate = 0
         self.speed = 0
+        self.wallet = 10
 
         self.effect_objects = set()
         self.attacking_entity_type = AttackEntity
@@ -41,11 +41,6 @@ class Entity:
         self.on_attack_summoning_event = set()
 
         self.on_entity_attack_event.add(self.summon_attacking_entity)
-
-        self.wallet = 10
-        # TODO experience
-        # self.experience_points = 0
-        # self.level = 1
 
     @property
     def priority(self):
@@ -133,7 +128,7 @@ class Entity:
             self.friends.remove(self.uuid)
         self.entities.pop(self.uuid)
 
-    def _coordinates_in_radius(self, cords: tuple):  # TODO debug
+    def _coordinates_in_radius(self, cords: tuple):
         dx = abs(cords[0] - self.__coordinates[0])
         dy = abs(cords[1] - self.__coordinates[1])
         if dx > self.attack_range:
@@ -214,20 +209,23 @@ class AttackEntity(Entity):
         super().__init__()
 
         self.distance = 0
-        self.coordinates = self.entities[parent_id].coordinates
-        self.road_map = None
+        try:
+            self.coordinates = self.entities[parent_id].coordinates
+            self.road_map = None
 
-        self.skin_dir = "assets/bullet.png"
-        self.speed = 7
+            self.skin_dir = "assets/bullet.png"
+            self.speed = 7
 
-        self.parent_id = parent_id
-        self.target_id = target_id
+            self.parent_id = parent_id
+            self.target_id = target_id
 
-        self.update_road_map()
-        self.set_friendly()
+            self.update_road_map()
+            self.set_friendly()
 
-        self.on_end_of_route_event = set()
-        self.on_end_of_route_event.add(self.__attack)
+            self.on_end_of_route_event = set()
+            self.on_end_of_route_event.add(self.__attack)
+        except KeyError:
+            self.despawn_entity()
 
     @property
     def priority(self):
