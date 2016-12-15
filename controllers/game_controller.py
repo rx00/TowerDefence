@@ -1,8 +1,10 @@
 import configparser
 import json
 import zipfile
+import pickle
 
 from PyQt5 import QtGui
+from PyQt5.Qt import QCursor
 from PyQt5.QtWidgets import QWidget, QLabel
 
 from ImageButton import register_button
@@ -39,7 +41,9 @@ class GameController:
         self.set_window_background()
         self.init_wave_controller()
         self.init_gui_elements()
-        self.app.mousePressEvent = self.mouse_press_event
+        self.monsters_to_win_amount = \
+            self.wave_controller.total_monster_count
+        self.start_restart = False
         self.on_mouse_press_event = set()
 
     def init_gui_elements(self):
@@ -106,6 +110,15 @@ class GameController:
             self.app,
             self.set_golem_mode
         )
+
+        self.save_button = register_button(
+            (120, 15),
+            ["assets/save.png", "assets/save.png"],
+            self.app,
+            self.set_golem_mode
+        )
+
+        self.save_button.resize(20, 20)
         self.golem_call_button.resize(45, 45)
         self.golem_call_button.show()
 
@@ -117,6 +130,7 @@ class GameController:
         self.play_button.hide()
         self.pause_button.show()
         self.speed_up_button.show()
+        self.save_button.show()
 
     def golem_button_image_handler(self):
         if self.money >= 80:
@@ -125,7 +139,12 @@ class GameController:
             self.golem_call_button.change_image("assets/golem_inactive.png")
 
     def set_golem_mode(self):
-        self.on_mouse_press_event.add(self.set_golem)
+        if self.money >= 80:
+            self.app.mousePressEvent = self.mouse_press_event
+            self.on_mouse_press_event.add(self.set_golem)
+            cursor_pixmap = QtGui.QPixmap("assets/golem.png")
+            cursor = QCursor(cursor_pixmap)
+            self.app.setCursor(cursor)
 
     def set_golem(self, cords):
         if self.money >= 80:
@@ -147,6 +166,8 @@ class GameController:
             )
             self.map_objects.add(golem)
         self.on_mouse_press_event.clear()
+        self.app.unsetCursor()
+        #self.do_save()
 
     def unzip_map(self, map_file):
         """
@@ -236,7 +257,7 @@ class GameController:
         self.clear_entities()
         self.golem_button_image_handler()
 
-        if not self.is_last_monster:
+        if self.monsters_to_win_amount:
             self.wave_controller.tick()
             if str(self.wave_controller.current_wave) != \
                     self.wave_bar.text().split()[1]:
@@ -244,7 +265,17 @@ class GameController:
                     "Wave: {}".format(self.wave_controller.current_wave)
                 )
         else:
-            print("WIN!")
+            if self.health >= 1:
+                self.end_window()
+            else:
+                self.end_window(win=False)
+
+        if self.health < 1:
+            self.app.timer.stop()
+            self.end_window(win=False)
+
+        if self.start_restart:
+            self.do_restart()
 
     @staticmethod
     def clear_entities():
@@ -301,8 +332,50 @@ class GameController:
 
     def mouse_press_event(self, e):
         x, y = e.pos().x(), e.pos().y()
+        print(1)
         for func in list(self.on_mouse_press_event):
             func((x, y))
+
+    def dec_monster_counter(self, _):
+        self.monsters_to_win_amount -= 1
+
+    def end_window(self, win=True):
+        self.win = QLabel(self.app)
+        if win:
+            directory = "assets/win.png"
+        else:
+            directory = "assets/loose.png"
+        win_pixmap = QtGui.QPixmap(directory)
+        self.win.setPixmap(win_pixmap)
+        restart_button = register_button(
+            (280, 340),
+            ["assets/new_game.png", "assets/new_game.png"],
+            self.win,
+            self.restart
+        )
+        self.win.show()
+        restart_button.show()
+
+    def restart(self):
+        self.start_restart = True
+        if not self.app.timer.isActive():
+            self.do_restart()
+
+    def do_restart(self):
+        self.app.timer.stop()
+        Entity.entities.clear()
+        EntityBridge.entities.clear()
+        self.app.close()
+        self.app.__init__()
+
+    def do_save(self):
+        saver = {
+            "entity": Entity.entities,
+            "graphic": EntityBridge.entities,
+            "map": self.map_name
+        }
+        with open("save", mode="w") as save:
+            pickle.dump(saver, save)
 
 
 class GameControllerError(Exception):

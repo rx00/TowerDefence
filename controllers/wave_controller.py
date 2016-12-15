@@ -12,12 +12,20 @@ class WaveController:
         self.current_wave = 1
         self.current_commands = []
         self.wait = 0
+        self.total_monster_count = None
+        self.current_wave_monster_count = None
         self.make_command_list()
 
     def make_command_list(self):
+        if self.total_monster_count is None:
+            self.total_monster_count = 0
+            for wave_dict in self.waves_json:
+                self.total_monster_count += wave_dict["amount"]
+
         creatures = self.waves_json[self.current_wave - 1]["creatures"]
         amt = int(self.waves_json[self.current_wave - 1]["amount"])
         period = int(self.waves_json[self.current_wave - 1]["period"])
+        self.current_wave_monster_count = amt
         command_list = []
         randomisation = random.sample(
             [x % len(creatures) for x in range(amt)], amt)
@@ -31,35 +39,36 @@ class WaveController:
         self.current_commands = command_list
 
     def tick(self):
-        if self.wait == 0:
+        if self.wait == 0 and self.current_commands:
             command = self.current_commands[0]
             self.current_commands = self.current_commands[1:]
             # типичный зомби, иногда - хилер
             if command == "zombie":
-                healer_chance = random.randint(0, 100)
-                if healer_chance >= 90:
-                    zombie = MonsterHealer(self.road_map, self.app)
-                elif 70 <= healer_chance <= 80:
-                    zombie = Rusher(self.road_map, self.app)
+                unique_chance = random.randint(0, 100)
+                if unique_chance >= 90:
+                    monster = MonsterHealer(self.road_map, self.app)
+                elif 70 <= unique_chance <= 80:
+                    monster = Rusher(self.road_map, self.app)
                 else:
-                    zombie = Zombie(self.road_map, self.app)
-                zombie.entity_logic_object.on_end_of_route_event.add(
+                    monster = Zombie(self.road_map, self.app)
+                monster.entity_logic_object.on_end_of_route_event.add(
                     self.controller.decrease_health
+                )
+                monster.entity_logic_object.on_despawn_event.add(
+                    self.controller.dec_monster_counter
                 )
             # конец волны
             elif command == "end":
                 if self.current_wave != len(self.waves_json):
                     self.current_wave += 1
                     self.make_command_list()
-                else:
-                    self.controller.is_last_monster = True
             elif command == "boss":
                 boss = Boss(self.road_map, self.app)
                 boss.entity_logic_object.on_end_of_route_event.add(
                     self.controller.decrease_health
                 )
-                boss.entity_logic_object.on_end_of_route_event.add(
-                    self.controller.decrease_health
+                boss.entity_logic_object.on_despawn_event.add(
+                    self.controller.dec_monster_counter
                 )
                 print("Boss spawned")
             # установить ожидание спавна следующего гада

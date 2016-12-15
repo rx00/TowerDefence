@@ -129,7 +129,8 @@ class Entity:
         self.on_despawn(self.uuid)
         if self.uuid in self.friends:
             self.friends.remove(self.uuid)
-        self.entities.pop(self.uuid)
+        if self.uuid in self.entities:
+            self.entities.pop(self.uuid)
 
     def _coordinates_in_radius(self, cords: tuple):
         dx = abs(cords[0] - self.__coordinates[0])

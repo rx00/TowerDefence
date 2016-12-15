@@ -2,7 +2,6 @@ import sys
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
-from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QApplication, QDesktopWidget
 
 from ImageButton import register_button
@@ -58,9 +57,6 @@ class MainWindow(QWidget):
         self.move((screen.width() - size.width()) / 2,
                   (screen.height() - size.height()) / 2)
 
-    def keyPressEvent(self, e):
-        if e.key() == Qt.Key_Escape:
-            self.close()
 
 if __name__ == '__main__':
 
