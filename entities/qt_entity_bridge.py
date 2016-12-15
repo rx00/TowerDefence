@@ -9,7 +9,12 @@ class EntityBridge:
     last_attack_uuid = -1
 
     def __init__(self,
-                 entity_object, parent=None, show_health=True, static=False):
+                 entity_object,
+                 parent=None,
+                 show_health=True,
+                 static=False,
+                 boss=False
+                 ):
 
         # Инициализация технических параметров сущности
         self.entity_logic_object = entity_object
@@ -18,7 +23,7 @@ class EntityBridge:
         self.entities[self.uuid] = self
         self.show_health = show_health
         self.static = static
-        self.is_boss = False
+        self.is_boss = boss
         self.current_attacks = {}
 
         # Инициализация основного графического объекта
@@ -41,9 +46,10 @@ class EntityBridge:
         # Инициализация линии HP
         if show_health:
             self.entity_logic_object_health = QtHealth(
-                self.parent
+                self.parent, boss=boss
             )
-            if len(self.entity_logic_object.coordinates) == 2:
+            if len(self.entity_logic_object.coordinates) == 2 \
+                    and not boss:
                 self.entity_logic_object_health.move(
                     *self.entity_logic_object.coordinates
                 )
@@ -62,13 +68,14 @@ class EntityBridge:
         )
         if self.show_health:
             self.entity_logic_object_health.on_health_loose(
-                self.entity_logic_object.health_points
+                self.entity_logic_object.health_points,
+                self.entity_logic_object.max_health_points
             )
-            self.entity_logic_object_health.move(
-                self.entity_logic_object.coordinates[0],
-                self.entity_logic_object.coordinates[1] + 23
-
-            )
+            if not self.is_boss:
+                self.entity_logic_object_health.move(
+                    self.entity_logic_object.coordinates[0],
+                    self.entity_logic_object.coordinates[1] + 23
+                )
         if self.static:
             self.entity_graphic_object.repaint()
 
@@ -113,14 +120,14 @@ class QtBasement(QWidget):
         self.current_pixmap = QPixmap("assets/install_active.png")
         self.method = run_method
 
-    def paintEvent(self, event):
+    def paintEvent(self, event):  # noqa
         painter = QPainter(self)
         painter.drawPixmap(event.rect(), self.current_pixmap)
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event):  # noqa
         self.method(self)
 
-    def sizeHint(self):
+    def sizeHint(self):  # noqa
         return self.current_pixmap.size()
 
 
@@ -131,15 +138,15 @@ class QtEntity(QWidget):
         self.pixmap = QPixmap(logic_obj_link.skin_dir)
         self.on_press = None
 
-    def paintEvent(self, event):
+    def paintEvent(self, event):  # noqa
         painter = QPainter(self)
         painter.drawPixmap(event.rect(), self.pixmap)
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event):  # noqa
         if self.on_press:
             self.on_press()
 
-    def sizeHint(self):
+    def sizeHint(self):  # noqa
         return self.pixmap.size()
 
 
@@ -169,23 +176,40 @@ class QtManagePanel(QWidget):
 
 
 class QtHealth(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, boss=False):
         super().__init__(parent)
-        self.background_palette = QFrame(self)
-        self.rectangle = QFrame(self)
-        self.rectangle.setGeometry(0, 0, 20, 3)
-        self.rectangle.setStyleSheet(
-            "QWidget { background-color: %s }" % "Green"
-        )
-        self.background_palette.setGeometry(-2, -2, 22, 5)
+        if not boss:
+            self.background_palette = QFrame(self)
+            self.rectangle = QFrame(self)
+        else:
+            self.background_palette = QFrame(self)
+            self.rectangle = QFrame(self)
+        self.boss = boss
+        if not boss:
+            self.rectangle.setGeometry(0, 0, 20, 3)
+            self.background_palette.setGeometry(-2, -2, 22, 5)
+            self.rectangle.setStyleSheet(
+                "QWidget { background-color: %s }" % "Green"
+            )
+        else:
+            self.rectangle.setGeometry(200, 440, 400, 6)
+            self.background_palette.setGeometry(200, 440, 400, 6)
+            self.rectangle.setStyleSheet(
+                "QWidget { background-color: %s }" % "Purple"
+            )
+
         self.background_palette.setStyleSheet(
             "QWidget { background-color: %s }" % "Black"
         )
 
-    def on_health_loose(self, health):
-        graphic_health = int(health * 0.2) + 1
-        self.rectangle.resize(graphic_health, 3)
-        self.update_health_color(graphic_health)
+    def on_health_loose(self, health, max_health):
+        if not self.boss:
+            graphic_health = int((health / max_health) * 20) + 1
+            self.rectangle.resize(graphic_health, 3)
+            self.update_health_color(graphic_health)
+        else:
+            graphic_health = int((health / max_health) * 400) + 1
+            self.rectangle.resize(graphic_health, 6)
 
     def update_health_color(self, health):
         self.rectangle.setStyleSheet(

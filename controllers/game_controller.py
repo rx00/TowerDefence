@@ -53,11 +53,6 @@ class GameController:
         self.health_bar = QLabel(self.status_bar_label)
         self.money_bar = QLabel(self.status_bar_label)
         self.wave_bar = QLabel(self.status_bar_label)
-        self.boss_bar_background = QLabel(self.app)
-        self.boss_bar_health = QLabel(self.app)
-
-        self.boss_bar_background.setGeometry(150, 740, 200, 5)
-        self.boss_bar_health.setGeometry(150, 740, 200, 5)
 
         self.health_bar.setGeometry(50, 5, 40, 20)
         self.money_bar.setGeometry(50, 42, 40, 20)
@@ -141,7 +136,7 @@ class GameController:
             for i, cord in enumerate(road_map):
                 x1, y1 = cord
                 x2, y2 = cords
-                length = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** (1/2)
+                length = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** (1 / 2)
                 if length <= closet_cords[2]:
                     closet_cords = (x1, y1, length, i)
 

@@ -67,10 +67,21 @@ class Zombie(MovingEntity):
     def __init__(self, road_map):
         super().__init__(road_map)
         self.speed = 3
-        self.health = 200
+        self.max_health_points = 200
+        self.health_points = self.max_health_points
         self.attack_strength += \
             random.randint(0, 10)
         self.wallet = 3 + random.randint(0, 7)
+
+
+class Boss(Zombie):
+    def __init__(self, road_map):
+        super().__init__(road_map)
+        self.max_health_points = 2000
+        self.health_points = self.max_health_points
+        self.wallet = 500
+        self.attack_strength = 80
+        self.speed = 2
 
 
 class Golem(MovingEntity):
@@ -81,7 +92,7 @@ class Golem(MovingEntity):
         self.on_end_of_route_event.clear()
         self.attack_range = 10
         self.attack_strength = 40
-        self.health_points = 100
+        self.max_health_points = 100
         self.set_friendly()
         self.on_entity_attack_event.add(self.back_attack)
 

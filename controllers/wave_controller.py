@@ -1,6 +1,6 @@
 import random
 
-from entities.figures import Zombie
+from entities.figures import Zombie, Boss
 
 
 class WaveController:
@@ -24,14 +24,15 @@ class WaveController:
         for random_pointer in randomisation:
             command_list.append(creatures[random_pointer])
             new_period = period - (period * 0.1) + (
-                (period * 0.01) * random.randint(0, 10)
+                (period * 0.01) * random.randint(-100, 30)
             )
+            print(new_period)
             command_list.append(int(new_period))
         command_list.append("end")
         self.current_commands = command_list
 
     def tick(self):
-        if not self.wait:
+        if self.wait == 0:
             command = self.current_commands[0]
             self.current_commands = self.current_commands[1:]
             # типичный зомби
@@ -48,18 +49,21 @@ class WaveController:
                 else:
                     self.controller.is_last_monster = True
             elif command == "boss":
-                boss = Zombie(self.road_map, self.app)
+                boss = Boss(self.road_map, self.app)
                 boss.entity_logic_object.on_end_of_route_event.add(
                     self.controller.decrease_health
                 )
-                boss.entity_logic_object.attack_strength = 30
-                boss.entity_logic_object.health_points = 500
-                boss.is_boss = True
+                boss.entity_logic_object.on_end_of_route_event.add(
+                    self.controller.decrease_health
+                )
+                print("Boss spawned")
             # установить ожидание спавна следующего гада
             elif isinstance(command, int):
                 self.wait = command
             # неизвестная команда
             else:
                 print("Error: {}".format(command))
+        elif self.wait < 0:
+            self.wait = 5
         else:
             self.wait -= 1

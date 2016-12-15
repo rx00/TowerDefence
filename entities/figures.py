@@ -13,6 +13,11 @@ class Gendalf(EntityBridge):
         super().__init__(logic.Gendalf(), parent=parent, static=True)
 
 
+class Boss(EntityBridge):
+    def __init__(self, road_map, parent=None):
+        super().__init__(logic.Boss(road_map), parent=parent, boss=True)
+
+
 class Zombie(EntityBridge):
     def __init__(self, road_map, parent=None):
         super().__init__(logic.Zombie(road_map), parent=parent)

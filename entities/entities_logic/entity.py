@@ -19,7 +19,7 @@ class Entity:
         self.__coordinates = ()
 
         self.max_health_points = 100
-        self.health_points = 100
+        self.health_points = self.max_health_points
 
         self.last_attacker_uuid = None
         self.attack_strength = 4
@@ -39,6 +39,7 @@ class Entity:
         self.on_entity_kill_event = set()
         self.on_entity_attack_event = set()
         self.on_attack_summoning_event = set()
+        self.on_hp_loose_event = set()
 
         self.on_entity_attack_event.add(self.summon_attacking_entity)
 
@@ -85,6 +86,8 @@ class Entity:
         """
         self.last_attacker_uuid = attacker_uuid
         self.health_points = max(0, self.health_points - dmg_points)
+        for func in self.on_hp_loose_event:
+            func(self.health_points)
         if self.health_points <= 0:
             try:
                 self.entities[self.last_attacker_uuid]\
