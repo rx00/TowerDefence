@@ -17,14 +17,18 @@ class Effect:
             "Poison": self.poison,
             "InstantDamage": self.instant_damage,
             "Slowness": self.slowness,
-            "BloodMagic": self.blood_magic
+            "Swiftness": self.swiftness
         }
 
+    def swiftness(self):
+        self.owner.speed += 2
+
     def heal_instantly(self):
+        self.effect_durability = 0
         self.owner.heal(20 * self.effect_strength)
 
     def regeneration(self):
-        self.owner.heal(1 * self.effect_strength)
+        self.owner.heal(5 * self.effect_strength)
 
     def poison(self):
         self.owner.health_points = max(
@@ -37,10 +41,6 @@ class Effect:
 
     def slowness(self):
         self.owner.speed = max(1, self.owner.speed // self.effect_strength)
-
-    def blood_magic(self):
-        self.owner.health_points -= 1
-        self.caller.heal(0.5 * self.effect_strength)
 
     def tick(self):
         self.effect_durability -= 1

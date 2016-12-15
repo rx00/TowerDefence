@@ -149,7 +149,7 @@ class Entity:
         best_priority = 0
         best_uuid = None
         for uuid in self.entities.keys():
-            if uuid not in self.friends:
+            if uuid not in self.friends and uuid != self.uuid:
                 enemy_cords = self.entities[uuid].coordinates
                 if self._coordinates_in_radius(enemy_cords):
                     if self.entities[uuid].priority > best_priority:

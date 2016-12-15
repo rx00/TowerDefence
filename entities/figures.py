@@ -21,10 +21,18 @@ class Boss(EntityBridge):
 class Zombie(EntityBridge):
     def __init__(self, road_map, parent=None):
         super().__init__(logic.Zombie(road_map), parent=parent)
-        self.entity_graphic_object.show()
+
+
+class MonsterHealer(EntityBridge):
+    def __init__(self, road_map, parent=None):
+        super().__init__(logic.MonsterHealer(road_map), parent=parent)
 
 
 class Golem(EntityBridge):
     def __init__(self, road_map, parent=None):
         super().__init__(logic.Golem(road_map), parent=parent, static=True)
-        self.entity_graphic_object.show()
+
+
+class Rusher(EntityBridge):
+    def __init__(self, road_map, parent=None):
+        super().__init__(logic.MonsterRusher(road_map), parent=parent)

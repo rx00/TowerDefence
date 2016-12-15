@@ -104,3 +104,69 @@ class Golem(MovingEntity):
         if len(self.road_map) - self.priority >= 120:
             self.do_move()
         self.do_attack()
+
+
+class MonsterHealer(MovingEntity):
+    def __init__(self, road_map):
+        super().__init__(road_map)
+        self.speed = 1
+        self.max_health_points = 400
+        self.health_points = self.max_health_points
+        self.attack_strength = 1
+        self.wallet = 30
+        self.attack_range = 35
+        self.attack_cooldown = 8
+
+        self.attacking_entity_type = HealAttack
+
+    @property
+    def priority(self):
+        return self.distance * 2
+
+    def tick(self):
+        self.do_move()
+        self.do_attack()
+
+
+class MonsterRusher(Zombie):
+    def __init__(self, road_map):
+        super().__init__(road_map)
+        self.speed = 5
+        self.attack_range = 40
+        self.attack_cooldown = 8
+        self.attacking_entity_type = SpeedAttack
+
+    def tick(self):
+        self.do_move()
+        self.do_attack()
+
+
+class HealAttack(AttackEntity):
+    def __init__(self, parent_id, target_id):
+        try:
+            super().__init__(parent_id, target_id)
+            self.skin_dir = "assets/heal.png"
+            self.speed = 4
+            self.on_end_of_route_event.clear()
+            self.on_end_of_route_event.add(self.cast_magic)
+        except AttributeError:
+            try:
+                Entity.entities.pop(self.uuid)
+            except KeyError:
+                pass
+
+    def cast_magic(self, _):
+        self.cast_effect(self.target_id, "HealInstantly", 1, 3)
+        self.cast_effect(self.target_id, "Regeneration", 45, 5)
+
+
+class SpeedAttack(AttackEntity):
+    def __init__(self, parent_id, target_id):
+        super().__init__(parent_id, target_id)
+        self.skin_dir = "assets/speed.png"
+        self.speed = 5
+        self.on_end_of_route_event.clear()
+        self.on_end_of_route_event.add(self.cast_magic)
+
+    def cast_magic(self, _):
+        self.cast_effect(self.target_id, "Swiftness", 1, 3)

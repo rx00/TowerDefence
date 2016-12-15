@@ -192,8 +192,9 @@ class QtHealth(QWidget):
                 "QWidget { background-color: %s }" % "Green"
             )
         else:
-            self.rectangle.setGeometry(200, 440, 400, 6)
-            self.background_palette.setGeometry(200, 440, 400, 6)
+            self.setGeometry(200, 440, 400, 6)
+            self.rectangle.setGeometry(0, 0, 400, 6)
+            self.background_palette.setGeometry(0, 0, 400, 6)
             self.rectangle.setStyleSheet(
                 "QWidget { background-color: %s }" % "Purple"
             )

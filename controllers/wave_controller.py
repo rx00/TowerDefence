@@ -1,6 +1,6 @@
 import random
 
-from entities.figures import Zombie, Boss
+from entities.figures import Zombie, Boss, MonsterHealer, Rusher
 
 
 class WaveController:
@@ -26,7 +26,6 @@ class WaveController:
             new_period = period - (period * 0.1) + (
                 (period * 0.01) * random.randint(-100, 30)
             )
-            print(new_period)
             command_list.append(int(new_period))
         command_list.append("end")
         self.current_commands = command_list
@@ -35,9 +34,15 @@ class WaveController:
         if self.wait == 0:
             command = self.current_commands[0]
             self.current_commands = self.current_commands[1:]
-            # типичный зомби
+            # типичный зомби, иногда - хилер
             if command == "zombie":
-                zombie = Zombie(self.road_map, self.app)
+                healer_chance = random.randint(0, 100)
+                if healer_chance >= 90:
+                    zombie = MonsterHealer(self.road_map, self.app)
+                elif 70 <= healer_chance <= 80:
+                    zombie = Rusher(self.road_map, self.app)
+                else:
+                    zombie = Zombie(self.road_map, self.app)
                 zombie.entity_logic_object.on_end_of_route_event.add(
                     self.controller.decrease_health
                 )
