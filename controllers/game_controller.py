@@ -1,7 +1,6 @@
 import configparser
 import json
 import zipfile
-import pickle
 
 from PyQt5 import QtGui
 from PyQt5.Qt import QCursor
@@ -44,7 +43,6 @@ class GameController:
         self.monsters_to_win_amount = \
             self.wave_controller.total_monster_count
         self.start_restart = False
-        self.on_mouse_press_event = set()
 
     def init_gui_elements(self):
         # Инициализация статус-бара
@@ -115,7 +113,7 @@ class GameController:
             (120, 15),
             ["assets/save.png", "assets/save.png"],
             self.app,
-            self.set_golem_mode
+            self.do_save
         )
 
         self.save_button.resize(20, 20)
@@ -140,8 +138,7 @@ class GameController:
 
     def set_golem_mode(self):
         if self.money >= 80:
-            self.app.mousePressEvent = self.mouse_press_event
-            self.on_mouse_press_event.add(self.set_golem)
+            self.app.mouse_events.add(self.set_golem)
             cursor_pixmap = QtGui.QPixmap("assets/golem.png")
             cursor = QCursor(cursor_pixmap)
             self.app.setCursor(cursor)
@@ -165,9 +162,8 @@ class GameController:
                 self.add_money
             )
             self.map_objects.add(golem)
-        self.on_mouse_press_event.clear()
+        self.app.mouse_events.clear()
         self.app.unsetCursor()
-        #self.do_save()
 
     def unzip_map(self, map_file):
         """
@@ -330,12 +326,6 @@ class GameController:
         self.play_button.hide()
         self.pause_button.show()
 
-    def mouse_press_event(self, e):
-        x, y = e.pos().x(), e.pos().y()
-        print(1)
-        for func in list(self.on_mouse_press_event):
-            func((x, y))
-
     def dec_monster_counter(self, _):
         self.monsters_to_win_amount -= 1
 
@@ -368,14 +358,12 @@ class GameController:
         self.app.close()
         self.app.__init__()
 
-    def do_save(self):
-        saver = {
-            "entity": Entity.entities,
-            "graphic": EntityBridge.entities,
-            "map": self.map_name
-        }
-        with open("save", mode="w") as save:
-            pickle.dump(saver, save)
+    @staticmethod
+    def do_save():
+        with open("save", mode="wb") as save:
+            print("start")
+            #pickle.dump(copy.deepcopy(Entity.entities), save, recurse=False)
+            print("Saved")
 
 
 class GameControllerError(Exception):

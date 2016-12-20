@@ -12,7 +12,7 @@ class ImageButton(QAbstractButton):
         :param parent: ссылка на объект-прародитель
         :return: объект кнопки
         """
-        super(ImageButton, self).__init__(parent)
+        super().__init__(parent)
         self.buttons.add(self)
         self.pixmap = QPixmap(pixmap)
 
@@ -44,7 +44,7 @@ class HoverImageButton(ImageButton):
     mouseHover = pyqtSignal(bool)
 
     def __init__(self, pixmap, parent):
-        super(HoverImageButton, self).__init__(pixmap, parent)
+        super().__init__(pixmap, parent)
         self.setMouseTracking(True)
 
     def enterEvent(self, event):

@@ -12,6 +12,7 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.init_ui()
+        self.mouse_events = set()
 
     def init_ui(self):
         self.setWindowTitle('Kings vs Zombies')
@@ -56,6 +57,11 @@ class MainWindow(QWidget):
         size = self.geometry()
         self.move((screen.width() - size.width()) / 2,
                   (screen.height() - size.height()) / 2)
+
+    def mousePressEvent(self, e):
+        x, y = e.pos().x(), e.pos().y()
+        for func in list(self.mouse_events):
+            func((x, y))
 
 
 if __name__ == '__main__':

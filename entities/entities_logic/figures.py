@@ -110,6 +110,7 @@ class MonsterHealer(MovingEntity):
     def __init__(self, road_map):
         super().__init__(road_map)
         self.speed = 1
+        self.skin_dir = "assets/healer.png"
         self.max_health_points = 400
         self.health_points = self.max_health_points
         self.attack_strength = 1
@@ -132,6 +133,7 @@ class MonsterRusher(Zombie):
     def __init__(self, road_map):
         super().__init__(road_map)
         self.speed = 5
+        self.skin_dir = "assets/rusher.png"
         self.attack_range = 40
         self.attack_cooldown = 8
         self.attacking_entity_type = SpeedAttack
